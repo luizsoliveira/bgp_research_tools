@@ -189,12 +189,12 @@ class RIPEClient:
         datetime_start = datetime(year_start, month_start, day_start, hour_start, minute_start)
         datetime_end = datetime(year_end, month_end, day_end, hour_end, minute_end)
 
-        #Rounding datetime_start to the next minute multiple of 5
-        min = ((datetime_start.minute // 5) * 5) + 5
+        #Rounding datetime_start to the next minute multiple of 5, just if it is not multiple of 5
+        min =datetime_start.minute if datetime_start.minute % 5 == 0 else ((datetime_start.minute // 5) + 5)
         adjusted_datetime_start = datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
-        #Rounding datetime_end to the before minute multiple of 5
-        min = ((datetime_end.minute // 5) * 5)
+        #Rounding datetime_end to the before minute multiple of 5, , just if it is not multiple of 5
+        min = datetime_end.minute if datetime_end.minute % 5 == 0 else ((datetime_end.minute // 5) * 5)
         adjusted_datetime_end = datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
         self.log_info('Start at: ' + str(datetime_start) + ' Adjusted for: ' + str(adjusted_datetime_start))
