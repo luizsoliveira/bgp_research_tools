@@ -121,92 +121,77 @@ class RIPEClient:
             minute="{:02d}".format(minute),
             rrc="{:02d}".format(rrc)
         )
-        
-        
-    def download_update_file(self, year, month, day, hour, minute, rrc=4):
 
-        # Checking time parameters
-        validate = (
-                self.validate_year(year)
-                and self.validate_month(month)
-                and self.validate_day(day)
-                and self.validate_hour(hour)
-                and self.validate_ripe_minute(minute))
-        
-        if not validate: return False
-        
-        # Setting the local attributes
-        filePath = self.generate_update_local_path(year, month, day, hour, minute, rrc)
-        head, tail = os.path.split(filePath)
-        self.create_path_if_not_exists(head)
+    def download_update_file(self, ripe_datetime, rrc=4):
 
-        # Setting the URL
-        url = self.generate_update_url(year, month, day, hour, minute, rrc)
+        if isinstance(ripe_datetime, datetime):
+            year, month, day, hour, minute = [
+            ripe_datetime.year,
+            ripe_datetime.month,
+            ripe_datetime.day,
+            ripe_datetime.hour,
+            ripe_datetime.minute,
+            ]
 
-        # Checking if the file was already downloaded before
-        if not os.path.exists(filePath):
-        
-            # Downloading the file
-            self.log_info('Downloading RIPE file: ' + url)
-            try:
-                res = requests.get(url, allow_redirects=True)
-                # Saving the file
+            # Setting the local attributes
+            filePath = self.generate_update_local_path(year, month, day, hour, minute, rrc)
+            head, tail = os.path.split(filePath)
+            self.create_path_if_not_exists(head)
+
+            # Setting the URL
+            url = self.generate_update_url(year, month, day, hour, minute, rrc)
+
+            # Checking if the file was already downloaded before
+            if not os.path.exists(filePath):
+            
+                # Downloading the file
+                self.log_info('Downloading RIPE file: ' + url)
                 try:
-                    open(filePath, 'wb').write(res.content)
-                    self.log_info('File saved in: ' + url)
-                    if os.path.exists(filePath):
-                        return filePath
-                    else:
-                        raise Exception('Downloaded file not found in: ' + url)
+                    res = requests.get(url, allow_redirects=True)
+                    # Saving the file
+                    try:
+                        open(filePath, 'wb').write(res.content)
+                        #self.log_info('File saved in: ' + url)
+                        if os.path.exists(filePath):
+                            return filePath
+                        else:
+                            raise Exception('Downloaded file not found in: ' + url)
+                    except:
+                        raise Exception('Failure when downloading the file: ' + url)
                 except:
                     raise Exception('Failure when downloading the file: ' + url)
-            except:
-                raise Exception('Failure when downloading the file: ' + url)
-            
+                
+            else:
+                self.log_info('Download prevented because the file was found in cache: ' + url)
+                return filePath
         else:
-            self.log_info('Download prevented because the file was found in cache: ' + url)
-            return filePath
-        
-    def download_updates_interval_files(self, year_start, month_start, day_start, hour_start, minute_start, year_end, month_end, day_end, hour_end, minute_end, rrc=4):
+            raise Exception('The parameter ripe_datetime need to be a datetime type.')
+    
 
-        # Checking time parameters (range)
-        validate = (
-                self.validate_year(year_start)
-                and self.validate_month(month_start)
-                and self.validate_day(day_start)
-                and self.validate_hour(hour_start)
-                and self.validate_minute(minute_start)
-                and self.validate_year(year_end)
-                and self.validate_month(month_end)
-                and self.validate_day(day_end)
-                and self.validate_hour(hour_end)
-                and self.validate_minute(minute_end)
-                )
-        
-        if not validate: return False 
+    def download_updates_interval_files(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
+        if isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime):
+            
+            #Rounding datetime_start to the next minute multiple of 5, just if it is not multiple of 5
+            min =ripe_datetime_start.minute if ripe_datetime_start.minute % 5 == 0 else ((ripe_datetime_start.minute // 5) + 5)
+            adjusted_datetime_start = ripe_datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
-        # Checking datetime
-        datetime_start = datetime(year_start, month_start, day_start, hour_start, minute_start)
-        datetime_end = datetime(year_end, month_end, day_end, hour_end, minute_end)
+            #Rounding datetime_end to the before minute multiple of 5, , just if it is not multiple of 5
+            min = ripe_datetime_end.minute if ripe_datetime_end.minute % 5 == 0 else ((ripe_datetime_end.minute // 5) * 5)
+            adjusted_datetime_end = ripe_datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
-        #Rounding datetime_start to the next minute multiple of 5, just if it is not multiple of 5
-        min =datetime_start.minute if datetime_start.minute % 5 == 0 else ((datetime_start.minute // 5) + 5)
-        adjusted_datetime_start = datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
+            self.log_info('Start at: ' + str(ripe_datetime_start) + ' Adjusted for: ' + str(adjusted_datetime_start))
+            self.log_info('_end at: ' + str(ripe_datetime_end) + ' Adjusted for: ' + str(adjusted_datetime_end))
 
-        #Rounding datetime_end to the before minute multiple of 5, , just if it is not multiple of 5
-        min = datetime_end.minute if datetime_end.minute % 5 == 0 else ((datetime_end.minute // 5) * 5)
-        adjusted_datetime_end = datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
+            #Generating datetimes
+            ts = adjusted_datetime_start
+            while adjusted_datetime_start <= ts <= adjusted_datetime_end:
+                try:
+                    self.download_update_file(ts)
+                except Exception as err:
+                    self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
 
-        self.log_info('Start at: ' + str(datetime_start) + ' Adjusted for: ' + str(adjusted_datetime_start))
-        self.log_info('End at: ' + str(datetime_end) + ' Adjusted for: ' + str(adjusted_datetime_end))
+                ts += timedelta(minutes=5)
 
-        #Generating datetimes
-        ts = adjusted_datetime_start
-        while adjusted_datetime_start <= ts <= adjusted_datetime_end:
-            try:
-                self.download_update_file(ts.year, ts.month, ts.day, ts.hour, ts.minute)
-            except Exception as err:
-                self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
-
-            ts += timedelta(minutes=5)
+        else:
+            raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
         
