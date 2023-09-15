@@ -52,6 +52,39 @@ class RIPEClient:
         if self.logging:
             return self.logging.warning(msg)
         
+    def check_interval(self,number, min, max):
+        return min <= number <= max
+    
+    def validate_year(self, year):
+        if not year >= 2021:
+            raise Exception('Year {year} must be greater than 2021'.format(year=year))
+        return True
+
+    def validate_month(self, month):
+        if not self.check_interval(month, 1, 12):
+            raise Exception('Month {month} must be within the range between 1 and 12'.format(month=month))
+        return True
+    
+    def validate_day(self, day):
+        if not self.check_interval(day, 1, 31):
+            raise Exception('Day {day} must be within the range between 1 and 31'.format(day=day))
+        return True
+    
+    def validate_hour(self, hour):
+        if not self.check_interval(hour, 0, 23):
+            raise Exception('Hour {hour} must be within the range between 0 and 23'.format(hour=hour))
+        return True
+    
+    def validate_minute(self, minute):
+        if not self.check_interval(minute, 0, 59):
+            raise Exception('Minute {minute} must be within the range between 0 and 59'.format(minute=minute))
+        return True
+    
+    def validate_ripe_minute(self, minute):
+        if not minute in range(0, 60, 5):
+            raise Exception('Minute {minute} must be within the range between 0 and 59 and be multiple of 5'.format(minute=minute))
+        return True
+    
     def create_path_if_not_exists(self,path):
         try:
             if not os.path.exists(path):
@@ -90,6 +123,15 @@ class RIPEClient:
         
         
     def download_update_file(self, year, month, day, hour, minute, rrc=4):
+
+        # Checking time parameters
+        validate = (self.validate_year(year)
+                and self.validate_month(month)
+                and self.validate_day(month)
+                and self.validate_hour(hour)
+                and self.validate_ripe_minute(minute))
+        
+        if not validate: return False
         
         # Setting the local attributes
         filePath = self.generate_update_local_path(year, month, day, hour, minute, rrc)
