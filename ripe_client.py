@@ -17,6 +17,7 @@ import tempfile
 import os
 import requests
 from pathlib import Path
+from datetime import datetime, timedelta
 
 class RIPEClient:
     def __init__(self,
@@ -125,9 +126,10 @@ class RIPEClient:
     def download_update_file(self, year, month, day, hour, minute, rrc=4):
 
         # Checking time parameters
-        validate = (self.validate_year(year)
+        validate = (
+                self.validate_year(year)
                 and self.validate_month(month)
-                and self.validate_day(month)
+                and self.validate_day(day)
                 and self.validate_hour(hour)
                 and self.validate_ripe_minute(minute))
         
@@ -165,7 +167,46 @@ class RIPEClient:
             self.log_info('Download prevented because the file was found in cache: ' + url)
             return filePath
         
-    #def download_updates_interval_files(self, yearStart, monthStart, dayStart, hourStart, minuteStart, yearEnd, monthEnd, dayEnd, hourEnd, minuteEnd, rrc=4):
+    def download_updates_interval_files(self, year_start, month_start, day_start, hour_start, minute_start, year_end, month_end, day_end, hour_end, minute_end, rrc=4):
 
-            
+        # Checking time parameters (range)
+        validate = (
+                self.validate_year(year_start)
+                and self.validate_month(month_start)
+                and self.validate_day(day_start)
+                and self.validate_hour(hour_start)
+                and self.validate_minute(minute_start)
+                and self.validate_year(year_end)
+                and self.validate_month(month_end)
+                and self.validate_day(day_end)
+                and self.validate_hour(hour_end)
+                and self.validate_minute(minute_end)
+                )
+        
+        if not validate: return False 
+
+        # Checking datetime
+        datetime_start = datetime(year_start, month_start, day_start, hour_start, minute_start)
+        datetime_end = datetime(year_end, month_end, day_end, hour_end, minute_end)
+
+        #Rounding datetime_start to the next minute multiple of 5
+        min = ((datetime_start.minute // 5) * 5) + 5
+        adjusted_datetime_start = datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
+
+        #Rounding datetime_end to the before minute multiple of 5
+        min = ((datetime_end.minute // 5) * 5)
+        adjusted_datetime_end = datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
+
+        self.log_info('Start at: ' + str(datetime_start) + ' Adjusted for: ' + str(adjusted_datetime_start))
+        self.log_info('End at: ' + str(datetime_end) + ' Adjusted for: ' + str(adjusted_datetime_end))
+
+        #Generating datetimes
+        ts = adjusted_datetime_start
+        while adjusted_datetime_start <= ts <= adjusted_datetime_end:
+            try:
+                self.download_update_file(ts.year, ts.month, ts.day, ts.hour, ts.minute)
+            except Exception as err:
+                self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
+
+            ts += timedelta(minutes=5)
         
