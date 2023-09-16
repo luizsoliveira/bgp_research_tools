@@ -167,9 +167,9 @@ class RIPEClient:
         else:
             raise Exception('The parameter ripe_datetime need to be a datetime type.')
     
-
-    def download_updates_interval_files(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
+    def generate_datetimes_interval(self, ripe_datetime_start, ripe_datetime_end):
         if isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime):
+            timestamps = []
             
             #Rounding datetime_start to the next minute multiple of 5, just if it is not multiple of 5
             min =ripe_datetime_start.minute if ripe_datetime_start.minute % 5 == 0 else ((ripe_datetime_start.minute // 5) + 5)
@@ -179,18 +179,33 @@ class RIPEClient:
             min = ripe_datetime_end.minute if ripe_datetime_end.minute % 5 == 0 else ((ripe_datetime_end.minute // 5) * 5)
             adjusted_datetime_end = ripe_datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
-            self.log_info('Start at: ' + str(ripe_datetime_start) + ' Adjusted for: ' + str(adjusted_datetime_start))
-            self.log_info('_end at: ' + str(ripe_datetime_end) + ' Adjusted for: ' + str(adjusted_datetime_end))
-
             #Generating datetimes
             ts = adjusted_datetime_start
             while adjusted_datetime_start <= ts <= adjusted_datetime_end:
-                try:
-                    self.download_update_file(ts)
-                except Exception as err:
-                    self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
-
+                timestamps.append(ts)
                 ts += timedelta(minutes=5)
+
+            return timestamps
+        else:
+            raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
+            
+
+    def download_updates_interval_files(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
+        if isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime):
+            
+            #Getting timestamps
+            timestamps = self.generate_datetimes_interval(ripe_datetime_start, ripe_datetime_end)
+
+            if len(timestamps):
+
+                self.log_info('Start at: ' + str(ripe_datetime_start) + ' Adjusted for: ' + str(timestamps[0]))
+                self.log_info('End at: ' + str(ripe_datetime_end) + ' Adjusted for: ' + str(timestamps[-1]))
+
+                for ts in timestamps:
+                    try:
+                        self.download_update_file(ts)
+                    except Exception as err:
+                        self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
 
         else:
             raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
