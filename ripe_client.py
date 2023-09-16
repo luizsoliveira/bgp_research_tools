@@ -28,6 +28,10 @@ class RIPEClient:
         self.baseURL = baseURL
         self.logging = logging
 
+        #Checking if logging has a valid value
+        if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
+            raise Exception('The logging parameters need to be a valid logging object or False')
+
         # Mapping possible cache location passed
         if (cacheLocation):
             self.workdir = cacheLocation
@@ -61,26 +65,6 @@ class RIPEClient:
             raise Exception('Year {year} must be greater than 2021'.format(year=year))
         return True
 
-    def validate_month(self, month):
-        if not self.check_interval(month, 1, 12):
-            raise Exception('Month {month} must be within the range between 1 and 12'.format(month=month))
-        return True
-    
-    def validate_day(self, day):
-        if not self.check_interval(day, 1, 31):
-            raise Exception('Day {day} must be within the range between 1 and 31'.format(day=day))
-        return True
-    
-    def validate_hour(self, hour):
-        if not self.check_interval(hour, 0, 23):
-            raise Exception('Hour {hour} must be within the range between 0 and 23'.format(hour=hour))
-        return True
-    
-    def validate_minute(self, minute):
-        if not self.check_interval(minute, 0, 59):
-            raise Exception('Minute {minute} must be within the range between 0 and 59'.format(minute=minute))
-        return True
-    
     def validate_ripe_minute(self, minute):
         if not minute in range(0, 60, 5):
             raise Exception('Minute {minute} must be within the range between 0 and 59 and be multiple of 5'.format(minute=minute))
@@ -171,11 +155,11 @@ class RIPEClient:
         if isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime):
             timestamps = []
             
-            #Rounding datetime_start to the next minute multiple of 5, just if it is not multiple of 5
+            #Rounding datetime_start to the next minute multiple of 5, just if it is not already a multiple of 5
             min =ripe_datetime_start.minute if ripe_datetime_start.minute % 5 == 0 else ((ripe_datetime_start.minute // 5) + 5)
             adjusted_datetime_start = ripe_datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
-            #Rounding datetime_end to the before minute multiple of 5, , just if it is not multiple of 5
+            #Rounding datetime_end to the before minute multiple of 5, just if it is not already a multiple of 5
             min = ripe_datetime_end.minute if ripe_datetime_end.minute % 5 == 0 else ((ripe_datetime_end.minute // 5) * 5)
             adjusted_datetime_end = ripe_datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
 
