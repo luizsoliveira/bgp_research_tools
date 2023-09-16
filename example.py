@@ -15,4 +15,8 @@ logging.basicConfig(
 client = RIPEClient(cacheLocation='./cache/ripe', logging=False)
 
 
-client.download_updates_interval_files(datetime(2022, 12, 25, 10, 0), datetime(2022, 12, 25, 11, 37))
+files = client.download_updates_interval_files(datetime(2022, 12, 25, 10, 0), datetime(2022, 12, 25, 11, 37))
+
+# The timestamps are returned as they are being generated using yield
+for file in files:
+    print(file)
