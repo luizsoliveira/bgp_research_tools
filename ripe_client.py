@@ -23,10 +23,13 @@ class RIPEClient:
     def __init__(self,
                  cacheLocation=False,
                  baseURL='https://data.ris.ripe.net',
-                 logging=False):
+                 logging=False,
+                 debug=False
+                 ):
         
         self.baseURL = baseURL
         self.logging = logging
+        self.debug = debug
 
         #Checking if logging has a valid value
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
@@ -46,16 +49,22 @@ class RIPEClient:
     def log_info(self, msg):
         if self.logging:
             return self.logging.info(msg)
-        else: print(msg)
+        elif self.debug: print(msg)
     
     def log_error(self, msg):
         if self.logging:
             return self.logging.error(msg)
-        else: print(msg)
+        elif self.debug: print(msg)
         
     def log_warning(self, msg):
         if self.logging:
             return self.logging.warning(msg)
+        elif self.debug: print(msg)
+
+    def log_debug(self, msg):
+        if self.logging:
+            return self.logging.debug(msg)
+        elif self.debug: print(msg)
         
     def check_interval(self,number, min, max):
         return min <= number <= max
@@ -166,10 +175,10 @@ class RIPEClient:
             #Generating datetimes
             ts = adjusted_datetime_start
             while adjusted_datetime_start <= ts <= adjusted_datetime_end:
-                timestamps.append(ts)
+                # The timestamps are returned as they are being generated using yield
+                yield ts
                 ts += timedelta(minutes=5)
 
-            return timestamps
         else:
             raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
             
@@ -180,16 +189,12 @@ class RIPEClient:
             #Getting timestamps
             timestamps = self.generate_datetimes_interval(ripe_datetime_start, ripe_datetime_end)
 
-            if len(timestamps):
-
-                self.log_info('Start at: ' + str(ripe_datetime_start) + ' Adjusted for: ' + str(timestamps[0]))
-                self.log_info('End at: ' + str(ripe_datetime_end) + ' Adjusted for: ' + str(timestamps[-1]))
-
-                for ts in timestamps:
-                    try:
-                        self.download_update_file(ts)
-                    except Exception as err:
-                        self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
+            # The timestamps are returned as they are being generated using yield
+            for ts in timestamps:
+                try:
+                    yield self.download_update_file(ts)
+                except Exception as err:
+                    self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
 
         else:
             raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
