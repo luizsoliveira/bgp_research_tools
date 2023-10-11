@@ -38,14 +38,17 @@ class RIPEClient:
 
         # Mapping possible cache location passed
         if (cacheLocation):
-            self.workdir = cacheLocation
+            self.work_dir = cacheLocation
         else:
-            self.workdir = tempfile.gettempdir() + "/ripe"
+            with tempfile.TemporaryDirectory() as tmp_dirname:
+                self.log_info(f"created temporary directory: {tmp_dirname}")
+                self.work_dir = tmp_dirname + "/ripe"
+            
 
         # Creating the directory if not exists
-        if not os.path.exists(self.workdir):
-            self.log_info("Creating the directory: " + self.workdir)
-            os.makedirs(self.workdir)
+        if not os.path.exists(self.work_dir):
+            self.log_info("Creating the directory: " + self.work_dir)
+            os.makedirs(self.work_dir)
 
     def log_info(self, msg):
         if self.logging:
@@ -111,8 +114,8 @@ class RIPEClient:
     
     def generate_update_local_path(self, year, month, day, hour, minute, rrc=4):
 
-        return "{workdir}/rrc{rrc}/{year}.{month}/updates.{year}{month}{day}.{hour}{minute}.gz".format(
-            workdir=self.workdir,
+        return "{work_dir}/rrc{rrc}/{year}.{month}/updates.{year}{month}{day}.{hour}{minute}.gz".format(
+            work_dir=self.work_dir,
             year=year,
             month="{:02d}".format(month),
             day="{:02d}".format(day),
@@ -140,7 +143,7 @@ class RIPEClient:
             # Setting the URL
             url = self.generate_update_url(year, month, day, hour, minute, rrc)
 
-            # Checking if the file was already downloaded before
+            # CACHE: Checking if the file was already downloaded before
             if not os.path.exists(filePath):
             
                 # Downloading the file
