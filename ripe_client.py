@@ -18,6 +18,7 @@ import os
 import requests
 from pathlib import Path
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 
 class RIPEClient:
     def __init__(self,
@@ -79,6 +80,11 @@ class RIPEClient:
             raise Exception('Minute {minute} must be within the range between 0 and 59 and be multiple of 5'.format(minute=minute))
         return True
     
+    def filename_from_url(self, url):
+        parsed_url = urlparse(url)
+        path = parsed_url.path
+        return os.path.basename(path)
+
     def create_path_if_not_exists(self,path):
         try:
             if not os.path.exists(path):
@@ -138,7 +144,7 @@ class RIPEClient:
             if not os.path.exists(filePath):
             
                 # Downloading the file
-                self.log_info('Downloading RIPE file: ' + url)
+                self.log_info('Downloading RIPE file: ' + self.filename_from_url(url))
                 try:
                     res = requests.get(url, allow_redirects=True)
                     # Saving the file
@@ -155,7 +161,7 @@ class RIPEClient:
                     raise Exception('Failure when downloading the file: ' + url)
                 
             else:
-                self.log_info('Download prevented because the file was found in cache: ' + url)
+                self.log_info('Download prevented because the file was found in cache: ' + self.filename_from_url(url))
                 return filePath
         else:
             raise Exception('The parameter ripe_datetime need to be a datetime type.')
