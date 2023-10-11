@@ -25,27 +25,29 @@ class RIPEClient:
                  cacheLocation=False,
                  baseURL='https://data.ris.ripe.net',
                  logging=False,
-                 debug=False
+                 debug=False,
                  ):
         
         self.baseURL = baseURL
         self.logging = logging
         self.debug = debug
-
+        
         #Checking if logging has a valid value
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
             raise Exception('The logging parameters need to be a valid logging object or False')
 
         # Mapping possible cache location passed
         if (cacheLocation):
+            #To-do: check if the location exists and it is writeable
             self.work_dir = cacheLocation
         else:
+            #Creating a unique temp dir (when cache feature is disabled)
             with tempfile.TemporaryDirectory() as tmp_dirname:
                 self.log_info(f"created temporary directory: {tmp_dirname}")
                 self.work_dir = tmp_dirname + "/ripe"
             
 
-        # Creating the directory if not exists
+        # Creating the work directory if not exists
         if not os.path.exists(self.work_dir):
             self.log_info("Creating the directory: " + self.work_dir)
             os.makedirs(self.work_dir)
@@ -74,8 +76,8 @@ class RIPEClient:
         return min <= number <= max
     
     def validate_year(self, year):
-        if not year >= 2021:
-            raise Exception('Year {year} must be greater than 2021'.format(year=year))
+        if not year >= 2001:
+            raise Exception('Year {year} must be greater than 2001'.format(year=year))
         return True
 
     def validate_ripe_minute(self, minute):
@@ -189,7 +191,7 @@ class RIPEClient:
                 ts += timedelta(minutes=5)
 
         else:
-            raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
+            raise Exception('The parameter ripe_datetime_start and ripe_datetime_end need to be a datetime type.')    
             
 
     def download_updates_interval_files(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
@@ -206,5 +208,5 @@ class RIPEClient:
                     self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
 
         else:
-            raise Exception('The parameter ripe_datetime_start and ripe_datetime_start need to be a datetime type.')    
+            raise Exception('The parameter ripe_datetime_start and ripe_datetime_end need to be a datetime type.')    
         
