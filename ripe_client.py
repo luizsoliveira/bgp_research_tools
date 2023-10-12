@@ -19,6 +19,7 @@ import requests
 from pathlib import Path
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
+import concurrent.futures
 
 class RIPEClient:
     def __init__(self,
@@ -26,12 +27,14 @@ class RIPEClient:
                  baseURL='https://data.ris.ripe.net',
                  logging=False,
                  debug=False,
+                 max_concurrent_requests=1
                  ):
         
         self.baseURL = baseURL
         self.logging = logging
         self.debug = debug
-        
+        self.max_concurrent_requests = int(max_concurrent_requests)
+
         #Checking if logging has a valid value
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
             raise Exception('The logging parameters need to be a valid logging object or False')
@@ -42,7 +45,7 @@ class RIPEClient:
             self.work_dir = cacheLocation
         else:
             #Creating a unique temp dir (when cache feature is disabled)
-            with tempfile.TemporaryDirectory() as tmp_dirname:
+            with tempfile.TemporaryDirectory(prefix="ripe_") as tmp_dirname:
                 self.log_info(f"created temporary directory: {tmp_dirname}")
                 self.work_dir = tmp_dirname + "/ripe"
             
@@ -139,9 +142,7 @@ class RIPEClient:
 
             # Setting the local attributes
             filePath = self.generate_update_local_path(year, month, day, hour, minute, rrc)
-            head, tail = os.path.split(filePath)
-            self.create_path_if_not_exists(head)
-
+            
             # Setting the URL
             url = self.generate_update_url(year, month, day, hour, minute, rrc)
 
@@ -154,13 +155,17 @@ class RIPEClient:
                     res = requests.get(url, allow_redirects=True)
                     # Saving the file
                     try:
+                        #Checking if the path exists
+                        head, tail = os.path.split(filePath)
+                        self.create_path_if_not_exists(head)
                         open(filePath, 'wb').write(res.content)
                         #self.log_info('File saved in: ' + url)
                         if os.path.exists(filePath):
                             return filePath
                         else:
                             raise Exception('Downloaded file not found in: ' + url)
-                    except:
+                    except Exception as e:
+                        print(e)
                         raise Exception('Failure when downloading the file: ' + url)
                 except:
                     raise Exception('Failure when downloading the file: ' + url)
@@ -200,12 +205,20 @@ class RIPEClient:
             #Getting timestamps
             timestamps = self.generate_datetimes_interval(ripe_datetime_start, ripe_datetime_end)
 
-            # The timestamps are returned as they are being generated using yield
-            for ts in timestamps:
+            if self.max_concurrent_requests > 0:
                 try:
-                    yield self.download_update_file(ts)
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_concurrent_requests) as executor:
+                        for result in executor.map(self.download_update_file, timestamps):
+                            yield result
                 except Exception as err:
                     self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
+
+            # # The timestamps are returned as they are being generated using yield
+            # for ts in timestamps:
+            #     try:
+            #         yield self.download_update_file(ts)
+            #     except Exception as err:
+            #         self.log_error(f"Unexpected error during the download {err=}, {type(err)=}")
 
         else:
             raise Exception('The parameter ripe_datetime_start and ripe_datetime_end need to be a datetime type.')    
