@@ -93,6 +93,39 @@ for file in files:
 
 With debug=True some messages will be printed on the screen during the client downloading proccess. 
 
+## Useful information about BGP anomaly events
+
+### Slammer
+* Beginning of the event: 25.01.2003 at 5:31 GMT
+* End of the event: 25.01.2003 at 19:59 GMT
+
+### Nimda
+* Beginning of the event: 18.09.2001 at 13:19 GMT 
+* End of the event: 20.09.2001 at 23:59 GMT 
+
+### Code Red I
+* Beginning of the event: 19.07.2001 at 13:20 GMT
+* End of the event: 19.07.2001 at 23:19 GMT
+
+### Moscow Blackout:
+* Beginning of the event: 25.05.2005 at 04:00 GMT
+* End of the event: 25.05.2005 at 07:59 GMT
+
+### Pakistan Power Outage:
+* Beginning of the event: 09.01.2005 at 18:40 GMT
+* End of the event: 09.01.2005 at 23:59 GMT
+
+### WannaCrypt Ransomware Attack
+
+* Beginning of the event: 
+* End of the event: 
+
+### WestRock Ransomware Attack
+* Beginning of the event: 23.01.2021 at 1:12 GMT
+* End of the event: 29.01 2021 at 23:59 GMT
+
+
+
 
 
 
