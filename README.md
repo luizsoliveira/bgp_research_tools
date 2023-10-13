@@ -1,9 +1,19 @@
-# ripe_client
+# BGP Research Tools
+
+A toolkit to help researchers work with BGP data, providing a CLI, clients, parsers, and other tools.
+
+* CLI;
+* RIPE Client;
+* Integration with MRT parsers;      
+
+
+## RIPE Client
+
 Client to facilitate downloading MRT files from the RIPE repository.
 
-## Usage
+### Usage
 
-### Simple usage without cache, logging, and debug
+#### Simple usage without cache, logging, and debug
 
 ```python
 client = RIPEClient()
@@ -40,7 +50,7 @@ for file in files:
 (...)/ripe/rrc04/2022.12/updates.20221225.1135.gz
 ```
 
-### Passing a cache location
+#### Passing a cache location
 
 ```python
 client = RIPEClient(cacheLocation='./cache/ripe')
@@ -56,7 +66,7 @@ Passing a cache location, the client will check the previous existence of the fi
 When the file is found in the cache, the client will return the cached file.
 When a cache location is not provided, the client will choose a temp directory and will use this for cache purposes.
 
-### Passing a logging object
+#### Passing a logging object
 
 ```python
 #LOGGING configuration
@@ -79,7 +89,7 @@ for file in files:
 
 In this way, some messages will be written in the log file in according to the log object configuration.
 
-### Enabling debug messages
+#### Enabling debug messages
 
 ```python
 client = RIPEClient(debug=True)
