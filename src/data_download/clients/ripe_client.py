@@ -177,52 +177,6 @@ class RIPEClient:
             self.log_info('Download prevented because the file was found in cache: ' + self.filename_from_url(url))
             return filePath
 
-    # def generate_datetimes_interval_before_july_2003(self, ripe_datetime_start, ripe_datetime_end):
-    #     if ripe_datetime_start > self.RIPE_DATETIME_FIRST_PATTERN_CHANGE:
-    #         raise Exception("This datetime is not supported yet")
-    #     else:
-    #         return False
-    
-    # def generate_datetimes_interval_from_july_2003(self, ripe_datetime_start, ripe_datetime_end):
-        
-    #     # Selecting just the time slice within the period from july 2003
-    #     if ripe_datetime_start < self.RIPE_DATETIME_FIRST_PATTERN_CHANGE:
-    #         ripe_datetime_start = self.RIPE_DATETIME_FIRST_PATTERN_CHANGE
-
-    #     #Rounding datetime_start to the next minute multiple of 5, just if it is not already a multiple of 5
-    #     min =ripe_datetime_start.minute if ripe_datetime_start.minute % 5 == 0 else ((ripe_datetime_start.minute // 5) + 5)
-    #     adjusted_datetime_start = ripe_datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
-
-    #     #Rounding datetime_end to the before minute multiple of 5, just if it is not already a multiple of 5
-    #     min = ripe_datetime_end.minute if ripe_datetime_end.minute % 5 == 0 else ((ripe_datetime_end.minute // 5) * 5)
-    #     adjusted_datetime_end = ripe_datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
-
-    #     #Generating datetimes
-    #     ts = adjusted_datetime_start
-    #     while adjusted_datetime_start <= ts <= adjusted_datetime_end:
-    #         # The timestamps are returned as they are being generated using yield
-    #         yield ts
-    #         ts += timedelta(minutes=5)
-    
-    # def generate_datetimes_interval(self, ripe_datetime_start, ripe_datetime_end):
-        
-    #     if not (isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime)):
-    #         raise Exception(f"The parameter ripe_datetime_start and ripe_datetime_end need to be a datetime type.")    
-        
-    #     if not (self.datetime_start_is_valid(ripe_datetime_start)):
-    #         raise Exception(f"The parameter ripe_datetime_start must be from or after than: {self.RIPE_DATETIME_BEGIN}")
-        
-    #     # timestamps = []
-
-    #     # Generate datetime intervals for the period 15min
-    #     # from 2001-04-24 at 10:42:00 to 2003-06-30 at 23:59:59
-    #     #first_period = self.generate_datetimes_interval_before_july_2003(ripe_datetime_start, ripe_datetime_end)
-    #     # if (first_period): timestamps.update(first_period)
-        
-    #     # Generate datetime intervals for the period 15min
-    #     # from 2003-07-01 at 00:00:00
-    #     yield self.generate_datetimes_interval_from_july_2003(ripe_datetime_start, ripe_datetime_end)
-
     def generate_years_and_months_interval(self, ripe_datetime_start, ripe_datetime_end):
             
             date_start = ripe_datetime_start.replace(day=1).date()
@@ -266,8 +220,7 @@ class RIPEClient:
             self.log_error(f"Something Else Error: {err} when scrapping the URL={url}")
 
     def get_datetime_from_url(self, url):
-        # https://data.ris.ripe.net/rrc04/2001.04/bview.20010430.1810.gz
-
+        
         filename = self.filename_from_url(url)
 
         file_type, date_str, time_str, extension = filename.split('.')
