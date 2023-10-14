@@ -2,7 +2,7 @@ import unittest
 import logging
 import tempfile
 
-from ripe_client import RIPEClient
+from src.data_download.clients.ripe_client import RIPEClient
 
 class RIPEClientUnitTest(unittest.TestCase):
 
