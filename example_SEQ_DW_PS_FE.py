@@ -92,7 +92,6 @@ print(f"Were parsed {parse_i} of {parse_t} files in {finish_parse_time-start_par
 
 
 # Extracting Features
-
 extractor = BGPFeatureExtraction(logging=logging,
                     debug=False,
                     max_concurrent_threads=12
