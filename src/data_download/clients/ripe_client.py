@@ -31,7 +31,7 @@ class RIPEClient:
 
     #Datetime of the first update message available on RIPE
     RIPE_DATETIME_BEGIN = datetime(2001, 4, 24, 10, 42)
-    
+    TYPE = 'ripe'
         
     def __init__(self,
                  cacheLocation=False,
@@ -50,6 +50,9 @@ class RIPEClient:
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
             raise Exception('The logging parameters need to be a valid logging object or False')
 
+        # This attribute stores the tmp_object
+        self.tmp = False
+
         # Mapping possible cache location passed
         if (cacheLocation):
             #To-do: check if the location exists and it is writeable
@@ -67,24 +70,20 @@ class RIPEClient:
             os.makedirs(self.work_dir)
 
     def log_info(self, msg):
-        if self.logging:
-            return self.logging.info(msg)
-        elif self.debug: print(msg)
+        if self.logging: self.logging.info(msg)
+        if self.debug: print(msg)
     
     def log_error(self, msg):
-        if self.logging:
-            return self.logging.error(msg)
-        elif self.debug: print(msg)
+        if self.logging: self.logging.error(msg)
+        if self.debug: print(msg)
         
     def log_warning(self, msg):
-        if self.logging:
-            return self.logging.warning(msg)
-        elif self.debug: print(msg)
+        if self.logging: self.logging.warning(msg)
+        if self.debug: print(msg)
 
     def log_debug(self, msg):
-        if self.logging:
-            return self.logging.debug(msg)
-        elif self.debug: print(msg)
+        if self.logging: self.logging.debug(msg)
+        if self.debug: print(msg)
         
     def check_interval(self,number, min, max):
         return min <= number <= max
