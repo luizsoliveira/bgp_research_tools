@@ -90,6 +90,8 @@ class BGPFeatureExtraction:
         
         try:
             output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
+            # print(cmd)
+            # print(output)
         except subprocess.CalledProcessError as e:
             self.log_error(
                 'Error during extracting feature file: {}. return code: {}. stderr: {}. stdout: {}.'.format(
