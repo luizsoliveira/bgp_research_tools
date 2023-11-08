@@ -1,9 +1,2 @@
-#!/bin/bash
-pid=$(ps ax | grep example.py | grep -v grep | head -n1 | cut -d " " -f 1)
-
-if test ! -z "$pid"
-then
-    ps -T -p $pid      
-fi
-
-
+#/bin/bash
+htop -p `{ python3 example_sequential_download_and_parse.py 128 > slammer_128.txt & } && echo $!`

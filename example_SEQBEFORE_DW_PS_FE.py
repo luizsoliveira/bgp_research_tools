@@ -11,10 +11,11 @@ from src.feature_extraction.feature_extraction import BGPFeatureExtraction
 from src.data_aggregation.merge_files import merge_files
 
 # thread = sys.argv[1]
+thread = 128
 
 #Configuração de LOGGING
 logging.basicConfig(
-    filename=f"bgpresearch.log",
+    filename=f"ripe_stats_{thread}.log",
     filemode='w',
     level=logging.ERROR,
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -38,18 +39,14 @@ parser = PythonMRTParser(
                     max_concurrent_threads=16)
 
 # Test
-datetime_start = datetime(2003, 1, 25, 15, 0)
-datetime_end = datetime(2003, 1, 26, 1, 5)
+# datetime_start = datetime(2003, 1, 25, 15, 0)
+# datetime_end = datetime(2003, 1, 26, 1, 5)
 
 # Slammer
 # Beginning of the event: 25.01.2003 at 5:31 GMT
 # End of the event: 25.01.2003 at 19:59 GMT
-# datetime_start = datetime(2003, 1, 23, 0, 0)
-# datetime_end = datetime(2003, 1, 27, 23, 59)
-
-#Gaza
-# datetime_start = datetime(2023, 10, 1, 0, 0)
-# datetime_end = datetime(2023, 10, 31, 23, 59)
+datetime_start = datetime(2003, 1, 23, 0, 0)
+datetime_end = datetime(2003, 1, 27, 23, 59)
 
 #Westrock ransomware dates
 # datetime_start = datetime(2021, 1, 21, 0, 0)
@@ -94,15 +91,18 @@ for file_parsed in files_parsed:
 finish_parse_time = time.perf_counter()
 print(f"Were parsed {parse_i} of {parse_t} files in {finish_parse_time-start_parse_time:.2f} seconds using {parser.max_concurrent_threads} threads.")
 
+merge_files(parsed_files, "./cache/ascii/AGGREGATED")
+
 
 # Extracting Features
 extractor = BGPFeatureExtraction(logging=logging,
                     debug=False,
                     max_concurrent_threads=12
+
 )
 
 start_extract_time = time.perf_counter()
-files_extract = extractor.extract_features_from_files(parsed_files)
+files_extract = extractor.extract_features_from_files(["./cache/ascii/AGGREGATED"])
 
 # The files are returned as they are being generated using yield
 extract_i = 0
@@ -121,7 +121,7 @@ print(f"Were extracted {extract_i} of {extract_t} files in {finish_extract_time-
 
 extracted_files.sort()
 
-merge_files(extracted_files, "./cache/DATASET")
+merge_files(extracted_files, "./cache/DATASET.beginAggregation")
 
 
 
