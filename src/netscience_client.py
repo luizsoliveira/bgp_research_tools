@@ -1,5 +1,6 @@
 import json
 import requests
+from pathlib import Path
 import logging
 import os
 import utils
@@ -31,6 +32,7 @@ class NetScienceClient:
                  base_url,
                  username,
                  password,
+                 base_path,
                  logging=False,
                  debug=False
                  ):
@@ -39,6 +41,7 @@ class NetScienceClient:
         self.logging = logging
         self.debug = debug
         self.token = False
+        self.base_path = base_path
 
         self.username = username
         self.password = password
@@ -46,7 +49,23 @@ class NetScienceClient:
         #Checking if logging has a valid value
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
             raise Exception('The logging parameters need to be a valid logging object or False')
+
+    def log_info(self, msg):
+        if self.logging: self.logging.info(msg)
+        if self.debug: print(msg)
+    
+    def log_error(self, msg):
+        if self.logging: self.logging.error(msg)
+        if self.debug: print(msg)
         
+    def log_warning(self, msg):
+        if self.logging: self.logging.warning(msg)
+        if self.debug: print(msg)
+
+    def log_debug(self, msg):
+        if self.logging: self.logging.debug(msg)
+        if self.debug: print(msg)
+
     def do_auth(self):
 
         headers= {
@@ -166,8 +185,6 @@ class NetScienceClient:
         path = f"/var/tasks/{taskId}/stdout.log"
         if os.path.exists(path):
             os.remove(path)
-        
-        
 
     def write_input_file(self, task):
         path = f"/var/tasks/{task['id']}/task.json"
@@ -179,3 +196,13 @@ class NetScienceClient:
         except IOError:
             raise Exception("Failure while writing file: " + path)
         
+    def create_path_if_not_exists(self,path):
+        try:
+            if not os.path.exists(path):
+                self.log_info('Creating dir: ' + path)
+                path = Path(path)
+                path.mkdir(parents=True, exist_ok=True)
+            return True
+        except:
+            self.log_error('Failure when creating the dir: ' + path)
+            return False
