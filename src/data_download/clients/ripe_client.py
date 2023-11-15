@@ -252,7 +252,7 @@ class RIPEClient:
 
     def get_updates_links_from_interval(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
 
-        files_urls = self.get_files_links_from_interval(ripe_datetime_start, ripe_datetime_end, rrc=4)
+        files_urls = self.get_files_links_from_interval(ripe_datetime_start, ripe_datetime_end, rrc)
 
         for file_url in files_urls:
 
