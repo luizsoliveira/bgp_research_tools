@@ -29,10 +29,6 @@ logging.basicConfig(
 client = NetScienceClient(netscience_config['BASE_URL'], netscience_config['USERNAME'], netscience_config['PASSWORD'], logging=logging)
 counter=0
 
-#Preparing TASKS folder
-if utils.create_path_if_not_exists(netscience_config['TASKS_BASE_PATH']):
-    logging.info(f"Was created the filesystem structure at {netscience_config['TASKS_BASE_PATH']}")
-
 print(" 🚚 Task catcher service started. ")
 
 while True:
@@ -41,6 +37,10 @@ while True:
     if (task):
         print(" ✅ New task found.")
         task_working_dir = f"{netscience_config['TASKS_BASE_PATH']}/{task['id']}"
+
+        #Preparing TASKS folder
+        if utils.create_path_if_not_exists(task_working_dir):
+            logging.info(f"Was created the filesystem structure at {task_working_dir}")
 
         stdout_path = f"{task_working_dir}/stdout.log"
         print(f" ✅ Writing output in: {stdout_path}")
