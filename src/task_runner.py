@@ -9,19 +9,16 @@ import time
 import logging
 import shutil
 
-print('basename:    ', os.path.basename(__file__))
-print('dirname:     ', os.path.dirname(__file__))
+# lib_path = f"{os.path.dirname(__file__)}/../"
+# print(lib_path)
+# sys.path.append(lib_path)
+# print(sys.path)
 
-exit()
-
-sys.path.append(os.getcwd())
-print(sys.path)
-
-from src.data_download.clients.ripe_client import RIPEClient
-from src.data_parse.python_mrt_parser import PythonMRTParser
-from src.feature_extraction.feature_extraction import BGPFeatureExtraction
-from src.data_aggregation.merge_files import merge_files
-from src.data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
+from data_download.clients.ripe_client import RIPEClient
+from data_parse.python_mrt_parser import PythonMRTParser
+from feature_extraction.feature_extraction import BGPFeatureExtraction
+from data_aggregation.merge_files import merge_files
+from data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
 
 task_working_dir = os.getcwd()
