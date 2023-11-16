@@ -1,4 +1,4 @@
-from ..data_download.clients.ripe_client import RIPEClient
+from data_download.clients.ripe_client import RIPEClient
 import tempfile
 import os
 from pathlib import Path
