@@ -8,6 +8,9 @@ import sys
 import time
 import logging
 import shutil
+import multiprocessing
+
+number_of_cores = multiprocessing.cpu_count()
 
 # lib_path = f"{os.path.dirname(__file__)}/../"
 # print(lib_path)
@@ -84,7 +87,7 @@ print('')
 logging.basicConfig(
     filename=f"bgpresearch.log",
     filemode='w',
-    level=logging.ERROR,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -104,7 +107,7 @@ parser = PythonMRTParser(
                     logging=logging,
                     mrt_client=client,
                     debug=False,
-                    max_concurrent_threads=16)
+                    max_concurrent_threads=number_of_cores)
 
 start_download_time = time.perf_counter()
 # Generator
@@ -151,7 +154,7 @@ print(f"Were parsed {parse_i} of {parse_t} files in {finish_parse_time-start_par
 # Extracting Features
 extractor = BGPFeatureExtraction(logging=logging,
                     debug=False,
-                    max_concurrent_threads=12
+                    max_concurrent_threads=number_of_cores
 )
 
 start_extract_time = time.perf_counter()
