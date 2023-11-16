@@ -27,12 +27,14 @@ class NetScienceClient:
     API_AUTH_ENDPOINT = 'rpc/login'
     API_CATCH_TASK_ENDPOINT = 'rpc/catch_task'
     API_TASK_ENDPOINT = 'tasks'
+    TASK_JSON_FILENAME = 'task.json'
+    TASK_STDOUT_FILENAME = 'stdout.log'
 
     def __init__(self,
                  base_url,
                  username,
                  password,
-                 base_path,
+                 task_base_path,
                  logging=False,
                  debug=False
                  ):
@@ -41,7 +43,8 @@ class NetScienceClient:
         self.logging = logging
         self.debug = debug
         self.token = False
-        self.base_path = base_path
+        self.task_base_path = task_base_path
+        self.create_path_if_not_exists(self.task_base_path)
 
         self.username = username
         self.password = password
@@ -170,24 +173,24 @@ class NetScienceClient:
         
     
     def initialize_dir(self, taskId):
-        path = f"/var/tasks/{taskId}"
+        path = f"{self.task_base_path}/{taskId}"
         if not os.path.exists(path):
             os.makedirs(path)
         else:
             utils.rm_folder_content(path)
     
     def reset_task_json(self, taskId):
-        path = f"/var/tasks/{taskId}/task.json"
+        path = f"{self.task_base_path}/{taskId}/{self.TASK_JSON_FILENAME}"
         if os.path.exists(path):
             os.remove(path)
     
     def reset_stdout(self, taskId):
-        path = f"/var/tasks/{taskId}/stdout.log"
+        path = f"{self.task_base_path}/{taskId}/{self.TASK_STDOUT_FILENAME}"
         if os.path.exists(path):
             os.remove(path)
 
     def write_input_file(self, task):
-        path = f"/var/tasks/{task['id']}/task.json"
+        path = f"{self.task_base_path}/{task['id']}/{self.TASK_JSON_FILENAME}"
         try:
             with open(path, "w") as outfile:
                 outfile.write(json.dumps(task, indent=2))
@@ -204,5 +207,6 @@ class NetScienceClient:
                 path.mkdir(parents=True, exist_ok=True)
             return True
         except:
-            self.log_error('Failure when creating the dir: ' + path)
-            return False
+            msg='Failure when creating the dir: ' + path
+            self.log_error(msg)
+            raise Exception(msg)
