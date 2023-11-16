@@ -101,9 +101,12 @@ class BGPFeatureExtraction:
                     e.output.decode(sys.getfilesystemencoding()),
                     )
             )
+            self.remove_parse_file(file_path)
             return False
             # print('stdout: {}'.format())
-            
+
+        self.remove_parse_file(file_path)
+
         #Checking if the path exists
         file_path_out = f"{file_path_out}_out.txt"
         if os.path.exists(file_path_out):
@@ -121,5 +124,7 @@ class BGPFeatureExtraction:
             except Exception as err:
                 self.log_error(f"Error during extracting features err={err}, {type(err)=}")
 
-        
+    def remove_parse_file(self, parse_filepath):
+        self.log_info(f"Removing parse file {parse_filepath}")
+        return os.remove(parse_filepath)  
         
