@@ -58,7 +58,7 @@ anomalous_time_end = p['anomalous_time_end']
 # data_partition_testing = p['data_partition_testing'] 
 # rnn_length = p['rnn_length']
 
-cache_path = '/opt/bgp_research' if p['cache'] == 'activated' else False
+cache_path = '/var/netscience/cache' if p['cache'] == 'activated' else False
 debug = True if p['debug'] == 'activated' else False
 
 print('')
