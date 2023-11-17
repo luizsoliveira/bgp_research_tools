@@ -1,3 +1,4 @@
+from dotenv import dotenv_values
 import json
 import os
 import utils
@@ -9,8 +10,18 @@ import time
 import logging
 import shutil
 import multiprocessing
+import humanize
 
-number_of_cores = multiprocessing.cpu_count()
+#Configuração de LOGGING
+logging.basicConfig(
+    filename=f"bgpresearch.log",
+    filemode='a',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S')
+
+app_path = f"{os.path.dirname(__file__)}"
+print(app_path)
 
 # lib_path = f"{os.path.dirname(__file__)}/../"
 # print(lib_path)
@@ -23,9 +34,20 @@ from feature_extraction.feature_extraction import BGPFeatureExtraction
 from data_aggregation.merge_files import merge_files
 from data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
+# LOADING ENV FILE
+netscience_path = f"{app_path}/../netscience.env"
+if not os.path.exists(netscience_path):
+    msg=f"ABORTING: were not found the netscience environment file at: {netscience_path}"
+    logging.error(msg)
+    sys.exit(msg)
+
+netscience_config = dotenv_values(netscience_path)
 
 task_working_dir = os.getcwd()
 print(f" 📂 Starting task on CWD: {task_working_dir}")
+
+number_of_cores = multiprocessing.cpu_count()
+print(f" 🧠 Detected number of CPU cores: {number_of_cores}")
 
 today = datetime.today()
 print(f" 🕣 Starting time: {today}")
@@ -58,7 +80,7 @@ anomalous_time_end = p['anomalous_time_end']
 # data_partition_testing = p['data_partition_testing'] 
 # rnn_length = p['rnn_length']
 
-cache_path = '/var/netscience/cache' if p['cache'] == 'activated' else False
+cache_path = netscience_config['CACHE_BASE_PATH'] if p['cache'] == 'activated' else False
 debug = True if p['debug'] == 'activated' else False
 
 print('')
@@ -83,13 +105,9 @@ utils.print_generic_parameters(params)
 
 print('')
 
-#Configuração de LOGGING
-logging.basicConfig(
-    filename=f"bgpresearch.log",
-    filemode='w',
-    level=logging.INFO,
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S')
+print(f" 📂 Cache path on: {cache_path}")
+
+print('')
 
 if os.path.exists(cache_path):
     #shutil.rmtree(cache_path)
@@ -98,12 +116,12 @@ if os.path.exists(cache_path):
     features_path = f"{cache_path}/features"
     if os.path.exists(features_path): shutil.rmtree(features_path)
 
-client = RIPEClient(cacheLocation=f"{cache_path}/mrt/ripe",
+client = RIPEClient(cacheLocation=f"{cache_path}/mrt",
                     logging=logging,
                     debug=False,
                     max_concurrent_requests=64)
 
-parser = PythonMRTParser(
+parser = PythonMRTParser(ascii_cache_location=f"{cache_path}/ascii",
                     logging=logging,
                     mrt_client=client,
                     debug=False,
@@ -114,22 +132,34 @@ start_download_time = time.perf_counter()
 files = client.download_updates_interval_files(datetime_start,
                                             datetime_end, int(ripe_ris_rrc))
 # The files are returned as they are being generated using yield
-i = 0
 t = 0
+from_download=0
+from_cache=0
+download_error=0
+bytes_from_remote=0
+bytes_from_cache=0
 downloaded_files = []
 for file in files:
     t+=1
     if file:
         # filename = os.path.basename(file)
         #print(f"File ready: {filename}")
-        print(f"File ready: {file}")
-        downloaded_files.append(file)
-        i+=1
+        if file['source']=='remote':
+            from_download+=1
+            bytes_from_remote+=file['file_size_in_bytes']
+            print(f"File {file['file_path']} of {humanize.naturalsize(file['file_size_in_bytes'])} were downloaded in {file['download_time_in_seconds']} seconds.")
+        else:
+            from_cache+=1
+            bytes_from_cache+=file['file_size_in_bytes']
+            print(f"File {file['file_path']} of {humanize.naturalsize(file['file_size_in_bytes'])} were retrieved from cache in no time.")
+        
+        downloaded_files.append(file)        
 
 print('')
 
 finish_download_time = time.perf_counter()
-print(f"Were downloaded (or obtained from cache) {i} of {t} files in {finish_download_time-start_download_time:.2f} seconds using {client.max_concurrent_requests} concurrent requests.")
+print(f"Were obtained {from_download+from_cache} of {t} files totaling {humanize.naturalsize(bytes_from_remote+bytes_from_cache)}  in {finish_download_time-start_download_time:.2f} seconds using {client.max_concurrent_requests} concurrent requests.")
+print(f"{from_download} files were downloaded ({humanize.naturalsize(bytes_from_remote)}) and {from_cache} were obtained from cache, avoiding download {humanize.naturalsize(bytes_from_cache)}.")
 
 start_parse_time = time.perf_counter()
 
@@ -139,53 +169,70 @@ files_parsed = parser.parse_files(downloaded_files)
 # The files are returned as they are being generated using yield
 parse_i = 0
 parse_t = 0
+bytes_parsed=0
 parsed_files = []
 for file_parsed in files_parsed:
     parse_t+=1
     if file_parsed:
         # filename = os.path.basename(file)
         #print(f"File ready: {filename}")
+        bytes_parsed+=file_parsed['parsed_file_size_in_bytes']
+        print(f"ASCII file created at {file_parsed['parsed_file_path']} with {humanize.naturalsize(file_parsed['parsed_file_size_in_bytes'])} in {file_parsed['parsing_time']} seconds.")
         parsed_files.append(file_parsed)
         parse_i+=1
 
 finish_parse_time = time.perf_counter()
-print(f"Were parsed {parse_i} of {parse_t} files in {finish_parse_time-start_parse_time:.2f} seconds using {parser.max_concurrent_threads} threads.")
+print(f"Were parsed {parse_i} of {parse_t} files totaling {humanize.naturalsize(bytes_parsed)} in {finish_parse_time-start_parse_time:.2f} seconds using {parser.max_concurrent_threads} threads.")
 
 # Extracting Features
-extractor = BGPFeatureExtraction(logging=logging,
-                    debug=False,
+extractor = BGPFeatureExtraction(features_cache_location=f"{cache_path}/features",
+                    logging=logging,
+                    debug=True,
                     max_concurrent_threads=number_of_cores
 )
 
 start_extract_time = time.perf_counter()
+
 files_extract = extractor.extract_features_from_files(parsed_files)
 
 # The files are returned as they are being generated using yield
 extract_i = 0
 extract_t = 0
+bytes_extracted=0
 extracted_files = []
 for file_extract in files_extract:
     extract_t+=1
     if file_extract:
         # filename = os.path.basename(file)
         #print(f"File ready: {filename}")
+        bytes_extracted+=file_extract['extraction_fileout_size_in_bytes']
+        print(f"Features file created at {file_extract['file_path']} with (Input: {humanize.naturalsize(file_extract['extraction_filein_size_in_bytes'])} / Output: {humanize.naturalsize(file_extract['extraction_fileout_size_in_bytes'])}) in {file_extract['extraction_time_in_seconds']} seconds.")
         extracted_files.append(file_extract)
         extract_i+=1
 
 finish_extract_time = time.perf_counter()
-print(f"Were extracted {extract_i} of {extract_t} files in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
+print(f"Were extracted {extract_i} of {extract_t} files totaling {humanize.naturalsize(bytes_extracted)}  in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
 
-extracted_files.sort()
+# extracted_files.sort()
+extracted_files.sort(key=lambda x: x['file_path'])
+
+print(f"Starting merge files.")
 
 dataset_path_tmp = './DATASET.tmp'
 dataset_path_with_labels = './DATASET.csv'
 
 headerLine = "DATETIME HOUR MINUTE SECOND F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20 F21 F22 F23 F24 F25 F26 F27 F28 F29 F30 F31 F32 F33 F34 F35 F36 F37"
 
-merge_files(extracted_files, dataset_path_tmp, headerLine)
+extracted_files_path = [f['file_path'] for f in extracted_files]
+merge_files(extracted_files_path, dataset_path_tmp, headerLine)
+
+print(f"Features files merge finished.")
+print(f"Starting data labeling.")
 
 data_labeler = AnomalousAndRegularDataLabeling(logging=logging)
 
 data_labeler.new_dataset_with_labels(dataset_path_tmp,dataset_path_with_labels, anomalous_datetime_start, anomalous_datetime_end)
-
 os.remove(dataset_path_tmp)
+
+print(f"Data labeling finished.")
+print(f"The dataset is ready available at {dataset_path_with_labels}")
