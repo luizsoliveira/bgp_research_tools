@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import concurrent.futures
+import time
 
 class PythonMRTParser:
 
@@ -37,7 +38,7 @@ class PythonMRTParser:
             self.work_dir = ascii_cache_location
         else:
             #Creating a unique temp dir (when cache feature is disabled)
-            with tempfile.TemporaryDirectory(prefix=f"mrt_") as tmp_dirname:
+            with tempfile.TemporaryDirectory(prefix=f"bgptools_") as tmp_dirname:
                 # If a tmp directory will be used it will be linked 
                 # in this attribute to be cleaned at the end of the execution
                 self.tmp = tmp_dirname
@@ -48,8 +49,8 @@ class PythonMRTParser:
 
         # Creating the work directory if not exists
         if not os.path.exists(self.work_dir):
-            self.log_info("Creating the MRT directory: " + self.work_dir)
-            os.makedirs(self.work_dir)
+            self.log_info("Creating the ASCII directory: " + self.work_dir)
+            self.create_path_if_not_exists(self.work_dir)
 
     def log_info(self, msg):
         if self.logging: self.logging.info(msg)
@@ -83,9 +84,14 @@ class PythonMRTParser:
             self.log_error('Failure when creating the dir: ' + path)
             return False
 
-    def parse_file(self, file_path):
+    def parse_file(self, file_dict):
 
-        file_path_out = file_path.replace('mrt', 'ascii').replace('.gz', '.parse')
+        if not file_dict['internal_path']:
+            raise Exception('File dict need to have the internal_path index')
+
+        file_path = file_dict['file_path']
+        internal_path_out = file_dict['internal_path'].replace('.gz', '.parse')
+        file_path_out = self.work_dir + internal_path_out
 
         #Creating dir if not exists
         head, tail = os.path.split(file_path_out)
@@ -96,6 +102,7 @@ class PythonMRTParser:
         #print(f"executing the command: {cmd}")
         
         try:
+            start_parse_time = time.perf_counter()
             output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
         except subprocess.CalledProcessError as e:
             self.log_error(
@@ -111,16 +118,19 @@ class PythonMRTParser:
             
         #Checking if the path exists
         if os.path.exists(file_path_out):
-            return file_path_out
+            finish_parse_time = time.perf_counter()
+            file_stats = os.stat(file_path_out)
+            # return file_path_out
+            return {"parsed_file_path": file_path_out, "parsed_internal_path": internal_path_out, "parsing_time": finish_parse_time-start_parse_time, "parsed_file_size_in_bytes": file_stats.st_size }
         else:
             self.log_error('Parsed file was not found in: ' + file_path_out)            
 
-    def parse_files(self, file_paths):
+    def parse_files(self, file_dicts):
 
         if self.max_concurrent_threads > 0:
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_concurrent_threads) as executor:
-                    for result in executor.map(self.parse_file, file_paths):
+                    for result in executor.map(self.parse_file, file_dicts):
                         yield result
             except Exception as err:
                 self.log_error(f"Error during parser err={err}, {type(err)=}")
