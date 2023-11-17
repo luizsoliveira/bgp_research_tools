@@ -22,7 +22,7 @@ INTERVAL_DURING_TASK_CATCHING=10
 logging.basicConfig(
     filename='netscience.log',
     filemode='w',
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s %(levelname)-8s %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S')
 
