@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import concurrent.futures
+import time
 
 class BGPFeatureExtraction:
 
@@ -46,7 +47,7 @@ class BGPFeatureExtraction:
 
     def log_info(self, msg):
         if self.logging: self.logging.info(msg)
-        if self.debug: print(msg)
+        if self.debug: print(f"{msg}\n")
     
     def log_error(self, msg):
         if self.logging: self.logging.error(msg)
@@ -76,9 +77,15 @@ class BGPFeatureExtraction:
             self.log_error('Failure when creating the dir: ' + path)
             return False
 
-    def extract_features_from_file(self, file_path):
+    def extract_features_from_file(self, file_dict):
 
-        file_path_out = file_path.replace('ascii', 'features').replace('.parse', '.features')
+        if not file_dict['parsed_internal_path']:
+            self.log_warning('To extract features file dict need to have the parsed_internal_path index.')
+            return False
+
+        file_path = file_dict['parsed_file_path']
+        internal_path_out = file_dict['parsed_internal_path'].replace('.parse', '.features')
+        file_path_out = self.work_dir + internal_path_out
 
         #Creating dir if not exists
         head, tail = os.path.split(file_path_out)
@@ -86,45 +93,54 @@ class BGPFeatureExtraction:
 
         path_csharp_tool = os.path.dirname(os.path.abspath(__file__))
         cmd = f"mono {path_csharp_tool}/ConsoleApplication1.exe {file_path} {file_path_out}"
-        #print(f"executing the command: {cmd}")
+        # print(f"CMD: {cmd}")
         
         try:
+            start_extract_time = time.perf_counter()
             output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
             # print(cmd)
-            # print(output)
         except subprocess.CalledProcessError as e:
+            print(f"Error output: {output}")
             self.log_error(
-                'Error during extracting feature file: {}. return code: {}. stderr: {}. stdout: {}.'.format(
+                'Error during extracting feature file: {}. return code: {}. stderr: {}. stdout: {}. output: {}'.format(
                     file_path,
                     e.returncode,
                     e.stderr.decode(sys.getfilesystemencoding()),
                     e.output.decode(sys.getfilesystemencoding()),
+                    "", #output
                     )
             )
-            self.remove_parse_file(file_path)
-            return False
+            # self.remove_parse_file(file_path)
+            # return False
             # print('stdout: {}'.format())
 
-        self.remove_parse_file(file_path)
-
-        #Checking if the path exists
+        #Adding the suffix created by C# program
         file_path_out = f"{file_path_out}_out.txt"
+        internal_path_out = f"{internal_path_out}_out.txt"
+        # Checking if the file was created
         if os.path.exists(file_path_out):
-            return file_path_out
+            finish_extract_time = time.perf_counter()
+            # return file_path_out
+            file_stats_in = os.stat(file_path)
+            file_stats_out = os.stat(file_path_out)
+            self.remove_parse_file(file_path)
+            return {"file_path": file_path_out, "internal_file_path": internal_path_out, "extraction_time_in_seconds": finish_extract_time-start_extract_time, "extraction_fileout_size_in_bytes": file_stats_out.st_size, "extraction_filein_size_in_bytes": file_stats_in.st_size}
         else:
-            self.log_error('File with extracted features was not found in: ' + file_path_out)            
+            msg='ERROR: File with extracted features was not found in: ' + file_path_out
+            print(msg)
+            self.log_error(msg)            
 
-    def extract_features_from_files(self, file_paths):
+    def extract_features_from_files(self, file_dicts):
 
         if self.max_concurrent_threads > 0:
             try:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_concurrent_threads) as executor:
-                    for result in executor.map(self.extract_features_from_file, file_paths):
+                    for result in executor.map(self.extract_features_from_file, file_dicts):
                         yield result
             except Exception as err:
                 self.log_error(f"Error during extracting features err={err}, {type(err)=}")
 
     def remove_parse_file(self, parse_filepath):
-        self.log_info(f"Removing parse file {parse_filepath}")
+        #self.log_info(f"Removing parse file {parse_filepath}")
         return os.remove(parse_filepath)  
         
