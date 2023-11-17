@@ -20,6 +20,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 import concurrent.futures
+import time
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -56,10 +57,10 @@ class RIPEClient:
         # Mapping possible cache location passed
         if (cacheLocation):
             #To-do: check if the location exists and it is writeable
-            self.work_dir = cacheLocation
+            self.work_dir = f"{cacheLocation}/ripe"
         else:
             #Creating a unique temp dir (when cache feature is disabled)
-            with tempfile.TemporaryDirectory(prefix="ripe_") as tmp_dirname:
+            with tempfile.TemporaryDirectory(prefix="bgptools_") as tmp_dirname:
                 self.log_info(f"created temporary directory: {tmp_dirname}")
                 self.work_dir = tmp_dirname + "/ripe"
             
@@ -142,7 +143,8 @@ class RIPEClient:
         #self.datetime_start_is_valid(ripe_datetime)
 
         # Setting the local attributes
-        filePath = self.work_dir + urlparse(url).path
+        internal_path = urlparse(url).path
+        filePath = self.work_dir + internal_path
         
         # CACHE: Checking if the file was already downloaded before
         if not os.path.exists(filePath):
@@ -150,6 +152,7 @@ class RIPEClient:
             # Downloading the file
             self.log_info('Downloading RIPE file: ' + self.filename_from_url(url))
             try:
+                download_start_time = time.perf_counter()
                 res = requests.get(url, allow_redirects=True)
                 res.raise_for_status()
                 try:
@@ -158,8 +161,11 @@ class RIPEClient:
                     self.create_path_if_not_exists(head)
                     open(filePath, 'wb').write(res.content)
                     #self.log_info('File saved in: ' + url)
+                    download_finish_time = time.perf_counter()
                     if os.path.exists(filePath):
-                        return filePath
+                        # return filePath
+                        file_stats = os.stat(filePath)
+                        return {"file_path": filePath, "internal_path": internal_path, "source": 'remote', "download_time_in_seconds":download_finish_time-download_start_time, "file_size_in_bytes": file_stats.st_size }
                     else:
                         self.log_error('Downloaded file was not found in: ' + filePath)
                 except Exception as err:
@@ -174,7 +180,9 @@ class RIPEClient:
                 self.log_error(f"Something Else Error: {err} during downloading file URL={url}")
         else:
             self.log_info('Download prevented because the file was found in cache: ' + self.filename_from_url(url))
-            return filePath
+            # return filePath
+            file_stats = os.stat(filePath)
+            return {"file_path": filePath, "internal_path": internal_path, "source": 'cache', "file_size_in_bytes": file_stats.st_size }
 
     def generate_years_and_months_interval(self, ripe_datetime_start, ripe_datetime_end):
             
