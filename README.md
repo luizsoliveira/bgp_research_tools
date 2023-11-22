@@ -6,6 +6,14 @@ A toolkit to help researchers work with BGP data, providing a CLI, clients, pars
 * RIPE Client;
 * Integration with MRT parsers;      
 
+## Instaling
+
+```bash
+git clone https://github.com/luizsoliveira/bgp_research_tools
+cd bgp_research_tools
+apt -y install python3-pip
+python3 -m pip install -r src/requirements.txt
+```
 
 ## RIPE Client
 
