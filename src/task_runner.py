@@ -11,6 +11,7 @@ import logging
 import shutil
 import multiprocessing
 import humanize
+import socket
 
 #Configuração de LOGGING
 logging.basicConfig(
@@ -21,7 +22,6 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 app_path = f"{os.path.dirname(__file__)}"
-print(app_path)
 
 # lib_path = f"{os.path.dirname(__file__)}/../"
 # print(lib_path)
@@ -41,13 +41,21 @@ if not os.path.exists(netscience_path):
     logging.error(msg)
     sys.exit(msg)
 
-netscience_config = dotenv_values(netscience_path)
-
-task_working_dir = os.getcwd()
-print(f" 📂 Starting task on CWD: {task_working_dir}")
+uname = os.uname()
+print(f" 🖥️ Node Hostname: {uname.nodename}")
+print(f"    Sysname: {uname.sysname}")
+print(f"    Release: {uname.release}")
+print(f"    Version: {uname.version}")
+print(f"    Arch: {uname.machine}")
 
 number_of_cores = multiprocessing.cpu_count()
 print(f" 🧠 Detected number of CPU cores: {number_of_cores}")
+
+netscience_config = dotenv_values(netscience_path)
+print(f" 💼 Netscience User: {netscience_config['USERNAME']}")
+
+task_working_dir = os.getcwd()
+print(f" 📂 Starting task on CWD: {task_working_dir}")
 
 today = datetime.today()
 print(f" 🕣 Starting time: {today}")
