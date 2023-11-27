@@ -7,7 +7,7 @@ import sys
 import concurrent.futures
 import time
 
-class BGPFeatureExtraction:
+class BGPCSharpFeatureExtraction:
 
     def __init__(self,
                  logging=False,
@@ -123,7 +123,7 @@ class BGPFeatureExtraction:
             # return file_path_out
             file_stats_in = os.stat(file_path)
             file_stats_out = os.stat(file_path_out)
-            self.remove_parse_file(file_path)
+            # self.remove_parse_file(file_path)
             return {"file_path": file_path_out, "internal_file_path": internal_path_out, "extraction_time_in_seconds": finish_extract_time-start_extract_time, "extraction_fileout_size_in_bytes": file_stats_out.st_size, "extraction_filein_size_in_bytes": file_stats_in.st_size}
         else:
             msg='ERROR: File with extracted features was not found in: ' + file_path_out

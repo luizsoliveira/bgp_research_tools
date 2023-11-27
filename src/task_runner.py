@@ -30,7 +30,7 @@ app_path = f"{os.path.dirname(__file__)}"
 
 from data_download.clients.ripe_client import RIPEClient
 from data_parse.python_mrt_parser import PythonMRTParser
-from feature_extraction.feature_extraction import BGPFeatureExtraction
+from feature_extraction.bgp_csharp_feature_extraction import BGPCSharpFeatureExtraction
 from data_aggregation.merge_files import merge_files
 from data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
@@ -84,6 +84,8 @@ anomalous_date_end = p['anomalous_date_end']
 anomalous_time_start = p['anomalous_time_start']
 anomalous_time_end = p['anomalous_time_end']
 
+fe_system = p['fe_system']
+
 # data_partition_training = p['data_partition_training'] 
 # data_partition_testing = p['data_partition_testing'] 
 # rnn_length = p['rnn_length']
@@ -105,7 +107,11 @@ params = {
     'datetime_start': datetime_start,
     'datetime_end': datetime_end,
     'anomalous_datetime_start': anomalous_datetime_start,
-    'anomalous_datetime_end': anomalous_datetime_end
+    'anomalous_datetime_end': anomalous_datetime_end,
+    'fe_system': fe_system,
+    'cache_path': cache_path,
+    'debug': debug
+
 }
 
 print(f" ⚙️ Task parameters (after parsing):")
@@ -129,11 +135,7 @@ client = RIPEClient(cacheLocation=f"{cache_path}/mrt",
                     debug=False,
                     max_concurrent_requests=64)
 
-parser = PythonMRTParser(ascii_cache_location=f"{cache_path}/ascii",
-                    logging=logging,
-                    mrt_client=client,
-                    debug=False,
-                    max_concurrent_threads=number_of_cores)
+# Downloading Files
 
 start_download_time = time.perf_counter()
 # Generator
@@ -169,57 +171,73 @@ finish_download_time = time.perf_counter()
 print(f"Were obtained {from_download+from_cache} of {t} files totaling {humanize.naturalsize(bytes_from_remote+bytes_from_cache)}  in {finish_download_time-start_download_time:.2f} seconds using {client.max_concurrent_requests} concurrent requests.")
 print(f"{from_download} files were downloaded ({humanize.naturalsize(bytes_from_remote)}) and {from_cache} were obtained from cache, avoiding download {humanize.naturalsize(bytes_from_cache)}.")
 
-start_parse_time = time.perf_counter()
+if fe_system == 'c_sharp':
 
-# Generator
-files_parsed = parser.parse_files(downloaded_files)
+    #When using CSharp Tool are required two separated steps: parsing and feature extraction
+    #Parsing using CSharp Tool
 
-# The files are returned as they are being generated using yield
-parse_i = 0
-parse_t = 0
-bytes_parsed=0
-parsed_files = []
-for file_parsed in files_parsed:
-    parse_t+=1
-    if file_parsed:
-        # filename = os.path.basename(file)
-        #print(f"File ready: {filename}")
-        bytes_parsed+=file_parsed['parsed_file_size_in_bytes']
-        print(f"ASCII file created at {file_parsed['parsed_file_path']} with {humanize.naturalsize(file_parsed['parsed_file_size_in_bytes'])} in {file_parsed['parsing_time']} seconds.")
-        parsed_files.append(file_parsed)
-        parse_i+=1
-
-finish_parse_time = time.perf_counter()
-print(f"Were parsed {parse_i} of {parse_t} files totaling {humanize.naturalsize(bytes_parsed)} in {finish_parse_time-start_parse_time:.2f} seconds using {parser.max_concurrent_threads} threads.")
-
-# Extracting Features
-extractor = BGPFeatureExtraction(features_cache_location=f"{cache_path}/features",
+    parser = PythonMRTParser(ascii_cache_location=f"{cache_path}/ascii",
                     logging=logging,
-                    debug=True,
-                    max_concurrent_threads=number_of_cores
-)
+                    mrt_client=client,
+                    debug=False,
+                    max_concurrent_threads=number_of_cores)
 
-start_extract_time = time.perf_counter()
+    start_parse_time = time.perf_counter()
 
-files_extract = extractor.extract_features_from_files(parsed_files)
+    # Generator
+    files_parsed = parser.parse_files(downloaded_files)
 
-# The files are returned as they are being generated using yield
-extract_i = 0
-extract_t = 0
-bytes_extracted=0
-extracted_files = []
-for file_extract in files_extract:
-    extract_t+=1
-    if file_extract:
-        # filename = os.path.basename(file)
-        #print(f"File ready: {filename}")
-        bytes_extracted+=file_extract['extraction_fileout_size_in_bytes']
-        print(f"Features file created at {file_extract['file_path']} with (Input: {humanize.naturalsize(file_extract['extraction_filein_size_in_bytes'])} / Output: {humanize.naturalsize(file_extract['extraction_fileout_size_in_bytes'])}) in {file_extract['extraction_time_in_seconds']} seconds.")
-        extracted_files.append(file_extract)
-        extract_i+=1
+    # The files are returned as they are being generated using yield
+    parse_i = 0
+    parse_t = 0
+    bytes_parsed=0
+    parsed_files = []
+    for file_parsed in files_parsed:
+        parse_t+=1
+        if file_parsed:
+            # filename = os.path.basename(file)
+            #print(f"File ready: {filename}")
+            bytes_parsed+=file_parsed['parsed_file_size_in_bytes']
+            print(f"ASCII file created at {file_parsed['parsed_file_path']} with {humanize.naturalsize(file_parsed['parsed_file_size_in_bytes'])} in {file_parsed['parsing_time']} seconds.")
+            parsed_files.append(file_parsed)
+            parse_i+=1
 
-finish_extract_time = time.perf_counter()
-print(f"Were extracted {extract_i} of {extract_t} files totaling {humanize.naturalsize(bytes_extracted)}  in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
+    finish_parse_time = time.perf_counter()
+    print(f"Were parsed {parse_i} of {parse_t} files totaling {humanize.naturalsize(bytes_parsed)} in {finish_parse_time-start_parse_time:.2f} seconds using {parser.max_concurrent_threads} threads.")
+
+    # Extracting Features
+    extractor = BGPCSharpFeatureExtraction(features_cache_location=f"{cache_path}/features",
+                        logging=logging,
+                        debug=True,
+                        max_concurrent_threads=number_of_cores
+    )
+
+    start_extract_time = time.perf_counter()
+
+    files_extract = extractor.extract_features_from_files(parsed_files)
+
+    # The files are returned as they are being generated using yield
+    extract_i = 0
+    extract_t = 0
+    bytes_extracted=0
+    extracted_files = []
+    for file_extract in files_extract:
+        extract_t+=1
+        if file_extract:
+            # filename = os.path.basename(file)
+            #print(f"File ready: {filename}")
+            bytes_extracted+=file_extract['extraction_fileout_size_in_bytes']
+            print(f"Features file created at {file_extract['file_path']} with (Input: {humanize.naturalsize(file_extract['extraction_filein_size_in_bytes'])} / Output: {humanize.naturalsize(file_extract['extraction_fileout_size_in_bytes'])}) in {file_extract['extraction_time_in_seconds']} seconds.")
+            extracted_files.append(file_extract)
+            extract_i+=1
+
+    finish_extract_time = time.perf_counter()
+    print(f"Were extracted {extract_i} of {extract_t} files totaling {humanize.naturalsize(bytes_extracted)}  in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
+    #Finished feature extraction using CSharp Tool
+
+elif fe_system == 'c_plusplus':
+    #When using CPlusplus Tool are required just one step to parse and extract features
+    pass
 
 # extracted_files.sort()
 extracted_files.sort(key=lambda x: x['file_path'])
