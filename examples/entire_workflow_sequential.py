@@ -9,7 +9,7 @@ sys.path.append(os.getcwd())
 
 from src.data_download.clients.ripe_client import RIPEClient
 from src.data_parse.python_mrt_parser import PythonMRTParser
-from src.feature_extraction.feature_extraction import BGPFeatureExtraction
+from feature_extraction.bgp_csharp_feature_extraction import BGPFeatureExtraction
 from src.data_aggregation.merge_files import merge_files
 from src.data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
@@ -46,8 +46,8 @@ parser = PythonMRTParser(
 # Slammer
 # Beginning of the event: 25.01.2003 at 5:31 GMT
 # End of the event: 25.01.2003 at 19:59 GMT
-datetime_start = datetime(2003, 1, 23, 0, 0)
-datetime_end = datetime(2003, 1, 27, 23, 59)
+datetime_start = datetime(2003, 1, 23, 0, 0, 0)
+datetime_end = datetime(2003, 1, 27, 23, 59, 59)
 
 #Gaza
 # datetime_start = datetime(2023, 10, 1, 0, 0)
