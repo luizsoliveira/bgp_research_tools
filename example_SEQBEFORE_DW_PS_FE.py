@@ -7,7 +7,7 @@ import time
 
 from src.data_download.clients.ripe_client import RIPEClient
 from src.data_parse.python_mrt_parser import PythonMRTParser
-from src.feature_extraction.feature_extraction import BGPFeatureExtraction
+from feature_extraction.bgp_csharp_feature_extraction import BGPFeatureExtraction
 from src.data_aggregation.merge_files import merge_files
 
 # thread = sys.argv[1]

@@ -165,3 +165,7 @@ Pipfile.lock
 .DS_Store
 netscience.env
 latexFeatures.py
+src/feature_extraction/mrtprocessor
+nodes.config
+nohup.out
+.gitignore
