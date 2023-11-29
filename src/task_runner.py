@@ -31,6 +31,7 @@ app_path = f"{os.path.dirname(__file__)}"
 from data_download.clients.ripe_client import RIPEClient
 from data_parse.python_mrt_parser import PythonMRTParser
 from feature_extraction.bgp_csharp_feature_extraction import BGPCSharpFeatureExtraction
+from feature_extraction.bgp_cplusplus_feature_extraction import BGPCPlusPlusFeatureExtraction
 from data_aggregation.merge_files import merge_files
 from data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
@@ -237,7 +238,36 @@ if fe_system == 'c_sharp':
 
 elif fe_system == 'c_plusplus':
     #When using CPlusplus Tool are required just one step to parse and extract features
-    pass
+    
+    # Extracting Features
+    extractor = BGPCPlusPlusFeatureExtraction(features_cache_location=f"{cache_path}/features",
+                        logging=logging,
+                        debug=True,
+                        max_concurrent_threads=number_of_cores
+    )
+
+    start_extract_time = time.perf_counter()
+
+    files_extract = extractor.extract_features_from_files(downloaded_files)
+
+    # The files are returned as they are being generated using yield
+    extract_i = 0
+    extract_t = 0
+    bytes_extracted=0
+    extracted_files = []
+    for file_extract in files_extract:
+        extract_t+=1
+        if file_extract:
+            # filename = os.path.basename(file)
+            #print(f"File ready: {filename}")
+            bytes_extracted+=file_extract['extraction_fileout_size_in_bytes']
+            print(f"Features file created at {file_extract['file_path']} with (Input: {humanize.naturalsize(file_extract['extraction_filein_size_in_bytes'])} / Output: {humanize.naturalsize(file_extract['extraction_fileout_size_in_bytes'])}) in {file_extract['extraction_time_in_seconds']} seconds.")
+            extracted_files.append(file_extract)
+            extract_i+=1
+
+    finish_extract_time = time.perf_counter()
+    print(f"Were extracted {extract_i} of {extract_t} files totaling {humanize.naturalsize(bytes_extracted)}  in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
+    #Finished feature extraction using CSharp Tool
 
 # extracted_files.sort()
 extracted_files.sort(key=lambda x: x['file_path'])
@@ -247,7 +277,10 @@ print(f"Starting merge files.")
 dataset_path_tmp = './DATASET.tmp'
 dataset_path_with_labels = './DATASET.csv'
 
-headerLine = "DATETIME HOUR MINUTE SECOND F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20 F21 F22 F23 F24 F25 F26 F27 F28 F29 F30 F31 F32 F33 F34 F35 F36 F37"
+if fe_system == 'c_sharp':
+    headerLine = "DATETIME HOUR MINUTE SECOND F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20 F21 F22 F23 F24 F25 F26 F27 F28 F29 F30 F31 F32 F33 F34 F35 F36 F37"
+elif fe_system == 'c_plusplus':
+    headerLine = "POSIXTIME DATETIME HOUR MINUTE SECOND F1 F2 F3 F4 F5 F6 F7 F8 F9 F10 F11 F12 F13 F14 F15 F16 F17 F18 F19 F20 F21 F22 F23 F24 F25 F26 F27 F28 F29 F30 F31 F32 F33 F34 F35 F36 F37"
 
 extracted_files_path = [f['file_path'] for f in extracted_files]
 merge_files(extracted_files_path, dataset_path_tmp, headerLine)
@@ -258,7 +291,7 @@ print(f"Starting data labeling.")
 data_labeler = AnomalousAndRegularDataLabeling(logging=logging)
 
 data_labeler.new_dataset_with_labels(dataset_path_tmp,dataset_path_with_labels, anomalous_datetime_start, anomalous_datetime_end)
-os.remove(dataset_path_tmp)
+# os.remove(dataset_path_tmp)
 
 print(f"Data labeling finished.")
 print(f"The dataset is ready available at {dataset_path_with_labels}")

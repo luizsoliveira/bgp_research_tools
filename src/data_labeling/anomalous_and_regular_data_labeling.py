@@ -44,7 +44,12 @@ class AnomalousAndRegularDataLabeling:
 
     def put_labels(self,df, anomalous_datetime_start, anomalous_datetime_end, regular_label=0, anomalous_label=1):
 
-        df['DATETIME'] = pd.to_datetime(df['DATETIME'])
+        # In case of CPlusPLus will use the column POSIXTIME
+        # In case of CSharp will be use column DATETIME
+        if 'POSIXTIME' in df.columns:
+            df['DATETIME'] = pd.to_datetime(df['POSIXTIME'], unit='s')
+        else: 
+            df['DATETIME'] = pd.to_datetime(df['DATETIME'])
 
         # print(df.info())
 
