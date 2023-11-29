@@ -65,7 +65,6 @@ cd src/mrtprocessor/
 cmake .
 make
 ln -sf /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/repo/src/mrtprocessor/mrtprocessor /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/bin/mrtprocessor
-ln -sf ./mrtprocessor ../../../bin/mrtprocessor
 
 
 
