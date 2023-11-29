@@ -1,5 +1,6 @@
 echo "This script was designed to be exected in their same path."
 echo "Execute using ./install_c_plusplus_tool.sh"
+echo "This script was designed to run jut on MacOS Darwin and Ubuntu 22.04"
 
 unameOut="$(uname -s)"
 case "${unameOut}" in
@@ -41,7 +42,8 @@ sudo apt install cmake
 cmake --version
 
 # Creating dir for mrtprocessor
-mkdir mrtprocessor
+mkdir -p /opt/bgp_research_tools/src/feature_extraction/mrtprocessor
+cd /opt/bgp_research_tools/src/feature_extraction/mrtprocessor
 
 # Installing library bgpdump
 echo "Installing library bgpdump"
@@ -49,7 +51,7 @@ git clone https://github.com/RIPE-NCC/bgpdump tmp_bgpdump
 cd tmp_bgpdump
 autoheader
 autoconf
-./configure --prefix $PWD/../mrtprocessor
+./configure --prefix /opt/bgp_research_tools/src/feature_extraction/mrtprocessor
 make
 make install
 cd ..
@@ -61,7 +63,12 @@ cd mrtprocessor/repo
 git checkout dev-2.0
 cd src/mrtprocessor/
 
-# Todo: Edit file CMakeLists.txt
+#Edit file CMakeLists.txt
+sed -i -e 's|/Users/ballanty/.local|/opt/bgp_research_tools/src/feature_extraction/mrtprocessor|g' ./CMakeLists.txt
+
+#Edit file main.cpp
+sed -i -e 's|__u6_addr\.|__in6_u.|g' ./main.cpp
+
 cmake .
 make
 ln -sf /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/repo/src/mrtprocessor/mrtprocessor /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/bin/mrtprocessor
