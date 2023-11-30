@@ -91,11 +91,11 @@ class BGPCPlusPlusFeatureExtraction:
         head, tail = os.path.split(file_path_out)
         self.create_path_if_not_exists(head)
 
-        #export DYLD_LIBRARY_PATH=/Users/luizsoliveira/.local/lib
+        #export DYLD_LIBRARY_PATH=/opt/bgp_research_tools/src/feature_extraction/mrtprocessor/lib
         #time ./mrtprocessor -T -o DATASET.csv -f /var/netscience/cache/mrt/ripe/rrc00/2005.05/updates.*.gz
 
         path_cplusplus_tool = os.path.dirname(os.path.abspath(__file__)) + "/mrtprocessor"
-        cmd = f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; {path_cplusplus_tool}/bin/mrtprocessor -T -o {file_path_out} -f {file_path}"
+        cmd = f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; {path_cplusplus_tool}/bin/mrtprocessor -np -T -o {file_path_out} -f {file_path}"
         # print(f"{cmd}\n")
         try:
             start_extract_time = time.perf_counter()

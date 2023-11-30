@@ -40,10 +40,10 @@ sudo apt clean all
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
 sudo apt update
-sudo apt install kitware-archive-keyring
+sudo apt install -y kitware-archive-keyring
 sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
 sudo apt update
-sudo apt install cmake
+sudo apt install -y cmake
 cmake --version
 
 # Creating dir for mrtprocessor
@@ -78,7 +78,7 @@ sed -i -e 's|__u6_addr\.|__in6_u.|g' ./main.cpp
 cmake .
 make
 ln -sf /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/repo/src/mrtprocessor/mrtprocessor /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/bin/mrtprocessor
-
+/opt/bgp_research_tools/src/feature_extraction/mrtprocessor/bin/mrtprocessor --help
 
 
 
