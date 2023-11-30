@@ -46,10 +46,11 @@ class AnomalousAndRegularDataLabeling:
 
         # In case of CPlusPLus will use the column POSIXTIME
         # In case of CSharp will be use column DATETIME
+        # Todo: change errors to raise and put the stack on LOG file.
         if 'POSIXTIME' in df.columns:
-            df['DATETIME'] = pd.to_datetime(df['POSIXTIME'], unit='s')
+            df['DATETIME'] = pd.to_datetime(df['POSIXTIME'], unit='s', errors='coerce')
         else: 
-            df['DATETIME'] = pd.to_datetime(df['DATETIME'])
+            df['DATETIME'] = pd.to_datetime(df['DATETIME'], errors='coerce')
 
         # print(df.info())
 
