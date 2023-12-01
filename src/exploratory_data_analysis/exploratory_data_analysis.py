@@ -21,6 +21,11 @@ def execute_eda_single_task(task_path):
     
     df = pd.read_csv(dataset_path)
     df.drop(['HOUR', 'MINUTE', 'SECOND'], axis=1, inplace=True)
+
+    if not 'LABEL' in df.columns:
+        print(f"Aborting: The dataset needs to have a LABEL column")
+        return False
+
     html_path = os.path.join(task_path, HTML_FILENAME)
     report = sv.analyze([df, "Dataset"],target_feat='LABEL')
     try:
