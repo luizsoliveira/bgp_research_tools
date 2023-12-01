@@ -11,6 +11,8 @@ pandas = "*"
 numpy = "*"
 python-dotenv = "*"
 humanize = "*"
+argparse = "*"
+sweetviz = "*"
 
 [dev-packages]
 
