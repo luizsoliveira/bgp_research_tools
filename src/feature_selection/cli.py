@@ -5,7 +5,7 @@ from feature_selection.feature_selection import ExtraTreesFeatureSelection
 
 DATASET_FILENAME = 'DATASET.csv'
 
-def execute_feature_selection_single_task(task_path, train_size):
+def execute_feature_selection_single_task(task_path, train_size, top_n_features=10):
     if not os.path.isdir(task_path):
         raise Exception(f"Aborting: You have to pass a valid task folder absolute path.")        
     
@@ -62,6 +62,9 @@ def execute_feature_selection_single_task(task_path, train_size):
     print(fs.getImportancesDataFrame())
     print()
 
-    fs.getSelectedFeatures()
+    print(f"###############################")
+    print(f"* Selected (N={top_n_features}) features:")
+    print(fs.getSelectedFeatures(top_n_features))
+    
 
     
