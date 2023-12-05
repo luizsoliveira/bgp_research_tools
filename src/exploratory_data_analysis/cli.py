@@ -1,4 +1,3 @@
-import argparse
 import os
 import pandas as pd
 import sweetviz as sv
@@ -50,15 +49,6 @@ def execute_eda_multiple_tasks(tasks_path):
     
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--task', dest='task_path', type=str, help='Execute automated EDA to a specific task absolute path')
-parser.add_argument('--tasks', dest='tasks_path', type=str, help='Execute automated EDA to all tasks folders inside a specific absolute path')
-args = parser.parse_args()
 
-if (args.task_path):
-    execute_eda_single_task(args.task_path)
-
-if (args.tasks_path):
-    execute_eda_multiple_tasks(args.tasks_path)
 
 
