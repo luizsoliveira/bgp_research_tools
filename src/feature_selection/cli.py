@@ -4,8 +4,9 @@ from dataset.dataset import Dataset
 from feature_selection.feature_selection import ExtraTreesFeatureSelection
 
 DATASET_FILENAME = 'DATASET.csv'
+IMPORTANCES_FILENAME = 'fs_importances.json'
 
-def execute_feature_selection_single_task(task_path, train_size, top_n_features=10):
+def execute_feature_selection_single_task(task_path, train_size, top_n_features=10, save_file=True):
     if not os.path.isdir(task_path):
         raise Exception(f"Aborting: You have to pass a valid task folder absolute path.")        
     
@@ -25,7 +26,9 @@ def execute_feature_selection_single_task(task_path, train_size, top_n_features=
     print(f"###############################")
     print(f"Looking for NaN values")
     nan_rows = df[df.isna().any(axis=1)]
-    print(nan_rows)
+    if (len(nan_rows)> 0):
+        print(nan_rows)
+    else: print(f"No NaN value were found.")
 
     print(f"###############################")
     print(f"* Stats of the original dataset")
@@ -57,14 +60,35 @@ def execute_feature_selection_single_task(task_path, train_size, top_n_features=
 
     fs = ExtraTreesFeatureSelection(tr_dataset)
 
+    # Importances Dataframe
+    idf = fs.getImportancesDataFrame()
     print(f"###############################")
     print(f"* Features in order of importance:")
-    print(fs.getImportancesDataFrame())
+    print(idf)
     print()
+    fs_importances_path = os.path.join(task_path, IMPORTANCES_FILENAME)
+    try:
+        with open(fs_importances_path, 'w') as file:
+            file.write(idf.to_json())
+        print(f"File with features importances saved at: {fs_importances_path}")
+    except Exception:
+        print(f"Failure when saving features importances file at: {fs_importances_path}.")
 
     print(f"###############################")
     print(f"* Selected (N={top_n_features}) features:")
     print(fs.getSelectedFeatures(top_n_features))
     
 
+def execute_feature_selection_multiple_tasks(tasks_path, train_size, top_n_features=10, save_file=True):
+    if not os.path.isdir(tasks_path):
+        print(f"Aborting: You have to pass a valid task folder absolute path.")
+        return False
     
+    for root, dirs, files in os.walk(tasks_path):
+        for d in dirs:
+            task_path = os.path.join(root, d)
+            print(f"Executing Feature Selection for {task_path}")
+            try:
+                execute_feature_selection_single_task(task_path, train_size, top_n_features, save_file)
+            except Exception as e:
+                print(e)

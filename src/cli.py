@@ -1,7 +1,7 @@
 import argparse
 
 from exploratory_data_analysis.cli import execute_eda_single_task, execute_eda_multiple_tasks
-from feature_selection.cli import execute_feature_selection_single_task
+from feature_selection.cli import execute_feature_selection_single_task, execute_feature_selection_multiple_tasks
 
 parser = argparse.ArgumentParser('CLI for the BGP Research Software')
 
@@ -33,5 +33,5 @@ if (args.command == 'feature_selection'):
     if (args.task_path):
         execute_feature_selection_single_task(args.task_path, train_size, top_n_features)
 
-    # if (args.tasks_path):
-    #     execute_eda_multiple_tasks(args.tasks_path)
+    if (args.tasks_path):
+        execute_feature_selection_multiple_tasks(args.tasks_path, train_size, top_n_features)

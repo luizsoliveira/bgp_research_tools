@@ -37,7 +37,7 @@ class ExtraTreesFeatureSelection:
         df = pd.DataFrame(feature_importance, index=x.columns, columns=['importance'])
         df.sort_values(by=['importance'], ascending=False, inplace=True)
         return df
-
+    
     # Extremely Randomized Trees Classifier(Extra Trees Classifier)    
     # Important to pass just the TRAINING DATASET
     def getSelectedFeatures(self, topFeatures=10, n_estimators=100, random_state=1):
