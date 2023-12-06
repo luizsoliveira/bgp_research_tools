@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from dataset.dataset import Dataset
 from feature_selection.feature_selection import ExtraTreesFeatureSelection
+import json
 
 DATASET_FILENAME = 'DATASET.csv'
 IMPORTANCES_FILENAME = 'fs_importances.json'
@@ -69,9 +70,10 @@ def execute_feature_selection_single_task(task_path, train_size, top_n_features=
     fs_importances_path = os.path.join(task_path, IMPORTANCES_FILENAME)
     try:
         with open(fs_importances_path, 'w') as file:
-            file.write(idf.to_json())
+            json_obj = json.loads(idf.to_json())
+            file.write(json.dumps(json_obj['importance']))
         print(f"File with features importances saved at: {fs_importances_path}")
-    except Exception:
+    except Exception as e:
         print(f"Failure when saving features importances file at: {fs_importances_path}.")
 
     print(f"###############################")
