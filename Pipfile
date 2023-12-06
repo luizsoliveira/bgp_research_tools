@@ -14,8 +14,9 @@ humanize = "*"
 argparse = "*"
 sweetviz = "*"
 scikit-learn = "*"
+torch = "==1.13.1"
 
 [dev-packages]
 
 [requires]
-python_version = "3.8"
+python_version = "3.8.18"
