@@ -20,7 +20,7 @@ def execute_feature_selection_single_task(task_path, train_size, top_n_features=
     #Dataset object
     dataset = Dataset(dataset_path)
     #Dataset DataFrame
-    df = dataset.dataset
+    df = dataset.df
 
     print(f"###############################")
     print(f"Looking for NaN values")
@@ -37,25 +37,25 @@ def execute_feature_selection_single_task(task_path, train_size, top_n_features=
     print(f"    Total after remove NaN lines: {len(df)}")
     print()
 
-    #Train DataFrame
-    trdf = dataset.get_training_sample(train_size)
+    #Train Dataset
+    tr_dataset = dataset.get_training_sample(train_size)
     print(f"###############################")
     print(f"* Stats of the TRAINING sample:")
-    print(f"    Regular: {len(trdf.loc[trdf['LABEL'] == 0])}")
-    print(f"    Anomalous: {len(trdf.loc[trdf['LABEL'] == 1])}")
-    print(f"    Total: {len(trdf)}")
+    print(f"    Regular: {tr_dataset.count_regular_data_points()}")
+    print(f"    Anomalous: {tr_dataset.count_anomalous_data_points()}")
+    print(f"    Total: {tr_dataset.count_total_data_points()}")
     print()
 
-    #Testing DataFrame
-    tsdf = dataset.get_testing_sample(train_size)
+    #Testing Dataset
+    ts_dataset = dataset.get_testing_sample(train_size)
     print(f"###############################")
     print(f"* Stats of the TESTING sample:")
-    print(f"    Regular: {len(tsdf.loc[tsdf['LABEL'] == 0])}")
-    print(f"    Anomalous: {len(tsdf.loc[df['LABEL'] == 1])}")
-    print(f"    Total: {len(tsdf)}")
+    print(f"    Regular: {ts_dataset.count_regular_data_points()}")
+    print(f"    Anomalous: {ts_dataset.count_anomalous_data_points()}")
+    print(f"    Total: {ts_dataset.count_total_data_points()}")
     print()
 
-    fs = ExtraTreesFeatureSelection(trdf)
+    fs = ExtraTreesFeatureSelection(tr_dataset)
 
     print(f"###############################")
     print(f"* Features in order of importance:")

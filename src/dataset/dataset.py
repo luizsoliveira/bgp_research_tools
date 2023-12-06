@@ -9,14 +9,15 @@ class Dataset:
         self.target_column = target_column
 
         if isinstance(dataset, str):
-            self.dataset = self.openDatasetFromFile(dataset)
-        elif isinstance(dataset, pd.DataFrame()):
-            self.dataset = dataset
+            self.file_path_input = dataset
+            self.df = self.openDatasetFromFile(dataset)
+        elif isinstance(dataset, pd.DataFrame):
+            self.df = dataset
 
         # Check Dataset
-        self.checkDataset(self.dataset)
+        self.checkDataset(self.df)
         # Remove undesired columns
-        self.dataset = self.removeUndesiredColumns(self.dataset)
+        self.df = self.removeUndesiredColumns(self.df)
 
     def openDatasetFromFile(self, dataset_path):
         
@@ -37,7 +38,7 @@ class Dataset:
     
     # Returns a DataFrame with the Dataset plus a TRAIN column
     # The TRAIN colum is filled according with train_size
-    def dataset_with_partition_column(self,train_size):
+    def get_df_with_partition_column(self,train_size):
         # In this kind of dataset, a Time Series
         # is not allowed to change the order of the records
         # Therefore the data is partitioned placing the
@@ -47,7 +48,7 @@ class Dataset:
         if not (train_size >=0 and train_size <=1):
             raise Exception(f"Train size must be >= 0 and <= 1")
         
-        df_lines = len(self.dataset.index)
+        df_lines = len(self.df.index)
         train_lines = round(df_lines * train_size)
         test_lines = df_lines - train_lines
 
@@ -55,9 +56,9 @@ class Dataset:
             raise Exception(f"The sum between number of training lines and testing lines should be equal to total number of lines")
 
         # # Creating a new and independent copy of the dataset
-        # df = self.dataset.copy(deep=True)
+        # df = self.df.copy(deep=True)
 
-        df = self.dataset
+        df = self.df
         # Creating a new column and setting train = 0 for all values
         df['TRAIN'] = 0
         # Setting train = 1 for the first train_lines
@@ -75,16 +76,36 @@ class Dataset:
         return df
     
     def get_training_sample(self, train_size):
-        df = self.dataset_with_partition_column(train_size)
+        df = self.get_df_with_partition_column(train_size)
         df = df.dropna()
         df = df.loc[df['TRAIN'] == 1]
-        return self.removeUndesiredColumns(df)
+        df = self.removeUndesiredColumns(df)
+        return Dataset(df)
     
     def get_testing_sample(self, train_size):
-        df = self.dataset_with_partition_column(train_size)
+        df = self.get_df_with_partition_column(train_size)
         df = df.dropna()
         df = df.loc[df['TRAIN'] == 0]
-        return self.removeUndesiredColumns(df)
+        df = self.removeUndesiredColumns(df)
+        return Dataset(df)
+    
+    def count_regular_data_points(self, regular_value=0):
+        return len(self.df.loc[self.df[self.target_column] == regular_value])
+    
+    def count_anomalous_data_points(self, anomalous_value=1):
+        return len(self.df.loc[self.df[self.target_column] == anomalous_value])
+    
+    def count_total_data_points(self):
+        return len(self.df)
+    
+    def get_x_y(self):
+        # Separating the dependent and independent variables
+        # The use of x and y variables are a convention in ML codes
+        y = self.df[self.target_column]
+        x = self.df.drop(self.target_column, axis = 1)
+        return x, y
+
+
     
     
 
