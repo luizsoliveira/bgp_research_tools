@@ -35,9 +35,8 @@ while True:
     task = client.catch_task('BGPAnomaly')
     
     if (task):
-        print(" ✅ New task found.")
+        print(f" ✅ New {task['pipeline']} task found.")
         task_working_dir = f"{netscience_config['TASKS_BASE_PATH']}/{task['id']}"
-
         #Preparing TASKS folder
         if utils.create_path_if_not_exists(task_working_dir):
             logging.info(f"Was created the filesystem structure at {task_working_dir}")
@@ -46,8 +45,12 @@ while True:
         print(f" ✅ Writing output in: {stdout_path}")
 
         # Executing python script without stdout buffer
-        command = f"python3 -u {os.getcwd()}/src/task_runner.py"
-
+        if task['pipeline'] == 'dataset':
+            command = f"python3 -u {os.getcwd()}/src/dataset_runner.py"
+        
+        elif task['pipeline'] == 'experiment':
+            command = f"python3 -u {os.getcwd()}/src/experiment_runner.py"
+        
         # Specify the file where you want to redirect the output
         output_file = f"{task_working_dir}/stdout.log"
 
