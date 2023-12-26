@@ -56,7 +56,7 @@ netscience_config = dotenv_values(netscience_path)
 print(f" 💼 Netscience User: {netscience_config['USERNAME']}")
 
 task_working_dir = os.getcwd()
-print(f" 📂 Starting task on CWD: {task_working_dir}")
+print(f" 📂 Starting dataset task on CWD: {task_working_dir}")
 
 today = datetime.today()
 print(f" 🕣 Starting time: {today}")

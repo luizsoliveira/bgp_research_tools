@@ -27,6 +27,7 @@ class NetScienceClient:
     API_AUTH_ENDPOINT = 'rpc/login'
     API_CATCH_TASK_ENDPOINT = 'rpc/catch_task'
     API_TASK_ENDPOINT = 'tasks'
+    API_EXPERIMENTS_ENDPOINT = 'experiments'
     TASK_JSON_FILENAME = 'task.json'
     TASK_STDOUT_FILENAME = 'stdout.log'
 
@@ -210,3 +211,34 @@ class NetScienceClient:
             msg='Failure when creating the dir: ' + path
             self.log_error(msg)
             raise Exception(msg)
+        
+    def get_experiment(self, id):
+
+        # If dont have a token to the authentication first
+        self.check_authentication()
+
+        headers = {
+            'Authorization': f"Bearer {self.token}"
+        }
+
+        data = {
+            "id": id
+        }
+
+        # sending get request and saving response as response object
+        r = requests.get(url=f"{self.base_url}/{self.API_EXPERIMENTS_ENDPOINT}", data=data, headers=headers)
+        response_data = json.loads(r.text)
+
+        if (r.status_code != 200 and r.status_code != 401):
+            raise Exception(f"Some unexpected problem occurred during the task catching. Code: {r.status_code}. Message: {response_data['message']}.")
+
+        # Repeating the operation just if: JWT expired and is allowed retry and was possible to authenticate
+        if (r.status_code == 401 and allow_retry and self.do_auth()):
+            # allow_retry = false => Repeating just one time
+            return self.get_experiment(id)
+        
+        if (len(response_data) > 0):
+            experiment = response_data[0]
+            return experiment
+        else:
+            return False
