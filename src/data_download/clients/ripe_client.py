@@ -101,6 +101,15 @@ class RIPEClient:
         parsed_url = urlparse(url)
         path = parsed_url.path
         return os.path.basename(path)
+    
+    # def date_from_url(self, url):
+    #     parsed_url = urlparse(url)
+    #     path = parsed_url.path
+    #     #Get the substring after ('updates.')
+    #     date = path.split('updates.', 1)[1]
+    #     #get the substring after the first .
+    #     date = path.split('.', 1)[0]
+    #     return date
 
     def create_path_if_not_exists(self,path):
         try:
@@ -165,7 +174,7 @@ class RIPEClient:
                     if os.path.exists(filePath):
                         # return filePath
                         file_stats = os.stat(filePath)
-                        return {"file_path": filePath, "internal_path": internal_path, "source": 'remote', "download_time_in_seconds":download_finish_time-download_start_time, "file_size_in_bytes": file_stats.st_size }
+                        return {"file_path": filePath, "internal_path": internal_path, "source": 'remote', "download_time_in_seconds":download_finish_time-download_start_time, "file_size_in_bytes": file_stats.st_size, "date": self.get_date_str_from_url(url)}
                     else:
                         self.log_error('Downloaded file was not found in: ' + filePath)
                 except Exception as err:
@@ -182,7 +191,7 @@ class RIPEClient:
             self.log_info('Download prevented because the file was found in cache: ' + self.filename_from_url(url))
             # return filePath
             file_stats = os.stat(filePath)
-            return {"file_path": filePath, "internal_path": internal_path, "source": 'cache', "file_size_in_bytes": file_stats.st_size }
+            return {"file_path": filePath, "internal_path": internal_path, "source": 'cache', "file_size_in_bytes": file_stats.st_size, "date": self.get_date_str_from_url(url)}
 
     def generate_years_and_months_interval(self, ripe_datetime_start, ripe_datetime_end):
             
@@ -233,8 +242,15 @@ class RIPEClient:
         file_type, date_str, time_str, extension = filename.split('.')
 
         return datetime.strptime(f"{date_str} {time_str}", "%Y%m%d %H%M")
+    
+    def get_date_str_from_url(self, url):
+        
+        filename = self.filename_from_url(url)
 
+        file_type, date_str, time_str, extension = filename.split('.')
 
+        return date_str
+    
     def get_files_links_from_interval(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
 
         # Generating tuples year/month (periods) from ripe_datetime_start to ripe_datetime_end
@@ -268,32 +284,6 @@ class RIPEClient:
                 yield file_url
 
         
-    # def generate_datetimes_interval(self, ripe_datetime_start, ripe_datetime_end):
-    #     if isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime):
-    #         timestamps = []
-            
-    #         #Rounding datetime_start to the next minute multiple of 5, just if it is not already a multiple of 5
-    #         min =ripe_datetime_start.minute if ripe_datetime_start.minute % 5 == 0 else ((ripe_datetime_start.minute // 5) + 5)
-    #         adjusted_datetime_start = ripe_datetime_start.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
-
-    #         #Rounding datetime_end to the before minute multiple of 5, just if it is not already a multiple of 5
-    #         min = ripe_datetime_end.minute if ripe_datetime_end.minute % 5 == 0 else ((ripe_datetime_end.minute // 5) * 5)
-    #         adjusted_datetime_end = ripe_datetime_end.replace(second=0, microsecond=0, minute=0)+timedelta(minutes=min)
-
-    #         #Generating datetimes
-    #         ts = adjusted_datetime_start
-    #         while adjusted_datetime_start <= ts <= adjusted_datetime_end:
-    #             # The timestamps are returned as they are being generated using yield
-    #             yield ts
-    #             ts += timedelta(minutes=5)
-
-    #     else:
-    #         raise Exception('The parameter ripe_datetime_start and ripe_datetime_end need to be a datetime type.')     
-
-
-
-
-
     def download_updates_interval_files(self, ripe_datetime_start, ripe_datetime_end, rrc=4):
         
         if not (isinstance(ripe_datetime_start, datetime) and isinstance(ripe_datetime_end, datetime)):
@@ -311,5 +301,19 @@ class RIPEClient:
                         yield result
             except Exception as err:
                 self.log_error(f"Error during the download err={err}, {type(err)=}")
+
+    def split_downloaded_files_in_buckets_per_day(self, downloaded_files):
+        buckets = {}
+        for file in downloaded_files:
+            # Checking if the bucket was not created yet
+            date = file['date']
+            if  date not in buckets:
+                buckets.update({date: []})
+
+            buckets[date].append(file)
+
+        return buckets
+            
+
 
         

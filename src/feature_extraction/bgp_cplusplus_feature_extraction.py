@@ -95,8 +95,12 @@ class BGPCPlusPlusFeatureExtraction:
         #time ./mrtprocessor -T -o DATASET.csv -f /var/netscience/cache/mrt/ripe/rrc00/2005.05/updates.*.gz
 
         path_cplusplus_tool = os.path.dirname(os.path.abspath(__file__)) + "/mrtprocessor"
-        cmd = f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; {path_cplusplus_tool}/bin/mrtprocessor -np -T -o {file_path_out} -f {file_path}"
-        # print(f"{cmd}\n")
+        cmd = \
+            f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; " +\
+            f"{path_cplusplus_tool}/bin/mrtprocessor " +\
+            f"-asnfilt \"513:3320:702:5377:8207:8207:15595\" " +\
+            f"-np -T -o {file_path_out} -f {file_path}"
+        print(f"{cmd}\n")
         try:
             start_extract_time = time.perf_counter()
             output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
@@ -127,9 +131,65 @@ class BGPCPlusPlusFeatureExtraction:
         else:
             msg='ERROR: File with extracted features was not found in: ' + file_path_out
             print(msg)
-            self.log_error(msg)            
+            self.log_error(msg)
 
-    def extract_features_from_files(self, file_dicts):
+    def extract_features_from_files(self, files_dict, file_path_out):
+
+        input_files = []
+        #Checking files_dict and creating input_files
+        for file_dict in files_dict:
+
+            if not file_dict['internal_path']:
+                self.log_warning('To extract features file dict need to have the parsed_internal_path index.')
+                return False
+
+            input_files.append(file_dict['file_path'])
+        
+        #Creating dir if not exists
+        head, tail = os.path.split(file_path_out)
+        self.create_path_if_not_exists(head)
+
+        path_cplusplus_tool = os.path.dirname(os.path.abspath(__file__)) + "/mrtprocessor"
+        #f"-asnfilt \"513:3320:702:5377:8207:8207:15595\" "+\
+        cmd = \
+            f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; " +\
+            f"{path_cplusplus_tool}/bin/mrtprocessor " +\
+            f"-T -o {file_path_out} " + \
+            f"-f {' '.join(input_files)}"
+        # print(f"{cmd}\n")
+        try:
+            start_extract_time = time.perf_counter()
+            output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)
+            # print(cmd)
+        except subprocess.CalledProcessError as e:
+            self.log_error(
+                'Error during extracting feature file: {}. return code: {}. stderr: {}. stdout: {}. output: {}'.format(
+                    file_path_out,
+                    e.returncode,
+                    e.stderr.decode(sys.getfilesystemencoding()),
+                    e.output.decode(sys.getfilesystemencoding()),
+                    "", #output
+                    )
+            )
+            # self.remove_parse_file(file_path)
+            # return False
+            # print('stdout: {}'.format())
+
+        # Checking if the file was created
+        if os.path.exists(file_path_out):
+            finish_extract_time = time.perf_counter()
+            # return file_path_out
+            file_stats_out = os.stat(file_path_out)
+            # self.remove_parse_file(file_path)
+            return {"file_path": file_path_out, "extraction_time_in_seconds": finish_extract_time-start_extract_time, "extraction_fileout_size_in_bytes": file_stats_out.st_size}
+        else:
+            msg='ERROR: File with extracted features was not found in: ' + file_path_out
+            print(msg)
+            self.log_error(msg)
+        
+
+    # Extract features using Python managed parallelism
+    def extract_features_from_files_with_external_parallelism(self, file_dicts):
 
         if self.max_concurrent_threads > 0:
             try:

@@ -12,6 +12,7 @@ import shutil
 import multiprocessing
 import humanize
 import socket
+import re
 
 #Configuração de LOGGING
 logging.basicConfig(
@@ -248,25 +249,25 @@ elif fe_system == 'c_plusplus':
 
     start_extract_time = time.perf_counter()
 
-    files_extract = extractor.extract_features_from_files(downloaded_files)
-
-    # The files are returned as they are being generated using yield
-    extract_i = 0
-    extract_t = 0
-    bytes_extracted=0
+    print(f"Splitting the downloaded files in chunks per day")
+    buckets = client.split_downloaded_files_in_buckets_per_day(downloaded_files)
     extracted_files = []
-    for file_extract in files_extract:
-        extract_t+=1
+    extract_i=0
+    extract_t=len(buckets.items())
+    for key, bucket in buckets.items():
+        file_path_out = bucket[0]['file_path']
+        file_path_out = file_path_out.replace('mrt', 'features')
+        file_path_out = re.sub('\.\d{4}\.gz', '.features', file_path_out)
+        print(f"Extracting {len(bucket)} files of the bucket {key} and writing in {file_path_out}")
+        file_extract = extractor.extract_features_from_files(bucket, file_path_out)
         if file_extract:
-            # filename = os.path.basename(file)
-            #print(f"File ready: {filename}")
-            bytes_extracted+=file_extract['extraction_fileout_size_in_bytes']
-            print(f"Features file created at {file_extract['file_path']} with (Input: {humanize.naturalsize(file_extract['extraction_filein_size_in_bytes'])} / Output: {humanize.naturalsize(file_extract['extraction_fileout_size_in_bytes'])}) in {file_extract['extraction_time_in_seconds']} seconds.")
             extracted_files.append(file_extract)
             extract_i+=1
 
-    finish_extract_time = time.perf_counter()
-    print(f"Were extracted {extract_i} of {extract_t} files totaling {humanize.naturalsize(bytes_extracted)}  in {finish_extract_time-start_extract_time:.2f} seconds using {extractor.max_concurrent_threads} threads.")
+        finish_extract_time = time.perf_counter()
+        print(f"Were extracted {extract_i} of {extract_t} buckets totaling in {finish_extract_time-start_extract_time:.2f} seconds")
+        
+        print()
     #Finished feature extraction using CSharp Tool
 
 # extracted_files.sort()
