@@ -22,7 +22,7 @@ class Dataset:
     def openDatasetFromFile(self, dataset_path):
         
         if not os.path.isfile(dataset_path):
-            raise Exception(f"Aborting: The task path provided must to have a {DATASET_FILENAME} file.")            
+            raise Exception(f"Aborting: The task path provided must to have a {dataset_path} file.")            
         
         df = pd.read_csv(dataset_path)
 
