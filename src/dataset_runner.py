@@ -265,9 +265,7 @@ elif fe_system == 'c_plusplus':
             extract_i+=1
 
         finish_extract_time = time.perf_counter()
-        print(f"Were extracted {extract_i} of {extract_t} buckets totaling in {finish_extract_time-start_extract_time:.2f} seconds")
-        
-        print()
+        print(f"Were extracted bucket {extract_i}/{extract_t} in {finish_extract_time-start_extract_time:.2f} seconds")
     #Finished feature extraction using CSharp Tool
 
 # extracted_files.sort()
