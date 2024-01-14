@@ -104,6 +104,11 @@ class Dataset:
         y = self.df[self.target_column]
         x = self.df.drop(self.target_column, axis = 1)
         return x, y
+    
+    def save_to_file(self, path = './DATASET.CSV'):
+        self.df.to_csv(path)
+    
+
 
 
     
