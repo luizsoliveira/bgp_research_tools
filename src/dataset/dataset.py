@@ -98,6 +98,28 @@ class Dataset:
     def count_total_data_points(self):
         return len(self.df)
     
+    # This method was designed for ordered datasets, usually time series dataset
+    # which all anomalous data points are located in a single contiguous cluster
+    def get_effective_percentage_from_anomalous_percentage(self, anomalous_percentage, anomalous_value=1):
+        
+        # Total amount of data points
+        size_total_sample = self.count_total_data_points()
+        
+        # Index of the first anomalous data point (getting target column from the class attribute)
+        first_anomalous_index = self.df[self.df[self.target_column] == anomalous_value].first_valid_index()
+        
+        # Index of the last anomalous data point (getting target column from the class attribute)
+        # last_anomalous_index = self.df[self.df[self.target_column] == anomalous_value].last_valid_index()
+        
+        # Amount of anomalous data points
+        size_anomalous_sample = len(self.df[self.df[self.target_column] == anomalous_value])
+
+        # Index of separation data point (data point that will split the partitions)
+        separation_data_point = round(first_anomalous_index + (size_anomalous_sample * anomalous_percentage))
+        
+        effective_percentage = separation_data_point / size_total_sample
+        return effective_percentage
+    
     def get_x_y(self):
         # Separating the dependent and independent variables
         # The use of x and y variables are a convention in ML codes
