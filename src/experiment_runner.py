@@ -14,6 +14,9 @@ from feature_selection.feature_selection import ExtraTreesFeatureSelection
 from exploratory_data_analysis.cli import execute_eda_single_task
 import sweetviz as sv
 
+DATASET_FILENAME = 'DATASET.csv'
+IMPORTANCES_FILENAME = 'fs_importances.json'
+
 #Configuração de LOGGING
 logging.basicConfig(
     filename=f"bgpresearch.log",
@@ -62,7 +65,7 @@ task = client.get_experiment(task['id'])
 p = task['parameters']
 p['dataset_id'] = task['dataset_id']
 dataset_task_path = os.path.join(netscience_config['TASKS_BASE_PATH'], task['dataset_id'])
-p['dataset_path'] = os.path.join(dataset_task_path, 'DATASET.csv')
+p['dataset_path'] = os.path.join(dataset_task_path, DATASET_FILENAME)
 
 print(f" ⚙️ Task parameters (before parsing):")
 utils.print_task_parameters(task)
@@ -118,7 +121,26 @@ df = df.dropna()
 print(f"  → Total after remove NaN lines: {len(df)}")
 print()
 
-df.info(verbose=True, show_counts=True)
+# df.info(verbose=True, show_counts=True)
+print()
+
+#Using dataset with NaN values dropped
+dataset = Dataset(df)
+
+#New Dataset with partition column
+new_df = dataset.get_df_with_partition_column(data_partition_training)
+print(f" 📊 Stats of the dataset with partition column")
+print(f"  → Training: {len(new_df.loc[new_df['TRAIN'] == 1])}")
+print(f"  → Testing: {len(new_df.loc[new_df['TRAIN'] == 0])}")
+print(f"  → Training - Regular: {len(new_df.loc[ (new_df['TRAIN'] == 1) & (new_df['LABEL'] == 0)])}")
+print(f"  → Training - Anomalous: {len(new_df.loc[(new_df['TRAIN'] == 1) & (new_df['LABEL'] == 1)])}")
+print(f"  → Testing - Regular: {len(new_df.loc[(new_df['TRAIN'] == 0) & (new_df['LABEL'] == 0)])}")
+print(f"  → Testing - Anomalous: {len(new_df.loc[(new_df['TRAIN'] == 0) & (new_df['LABEL'] == 1)])}")
+print(f"  → Total: {len(new_df)}")
+print()
+
+# new_df.info(verbose=True, show_counts=True)
+new_df.to_csv(DATASET_FILENAME)
 print()
 
 #Train Dataset
@@ -130,7 +152,7 @@ print(f"  → Anomalous: {tr_dataset.count_anomalous_data_points()}")
 print(f"  → Total: {tr_dataset.count_total_data_points()}")
 print()
 
-tr_dataset.df.info(verbose=True, show_counts=True)
+# tr_dataset.df.info(verbose=True, show_counts=True)
 print()
 
 #Testing Dataset
@@ -141,15 +163,39 @@ print(f"  → Anomalous: {ts_dataset.count_anomalous_data_points()}")
 print(f"  → Total: {ts_dataset.count_total_data_points()}")
 print()
 
-ts_dataset.df.info(verbose=True, show_counts=True)
+# ts_dataset.df.info(verbose=True, show_counts=True)
 print()
 
 print(f" 📉 Executing automatic exploratory data analysis")
-
 html_path = os.path.join(task_working_dir, 'eda.html')
 report = sv.compare([tr_dataset.df, "Trainning"],[ts_dataset.df, "Test"], target_feat=dataset.target_column)
 try:
     report.show_html(html_path, open_browser=False, layout='vertical')
 except Exception as e:
     print(f"Failure during writing html EDA file. {html_path}")
+
+print(f" 📉 Executing Feature Selection")
+
+fs = ExtraTreesFeatureSelection(tr_dataset)
+
+# Importances Dataframe
+idf = fs.getImportancesDataFrame()
+print(f"###############################")
+print(f"* Features in order of importance:")
+print(idf)
+print()
+fs_importances_path = os.path.join(task_working_dir, IMPORTANCES_FILENAME)
+try:
+    with open(fs_importances_path, 'w') as file:
+        json_obj = json.loads(idf.to_json())
+        file.write(json.dumps(json_obj['importance']))
+    print(f"File with features importances saved at: {fs_importances_path}")
+except Exception as e:
+    print(f"Failure when saving features importances file at: {fs_importances_path}.")
+
+top_n_features = 10
+
+print(f"###############################")
+print(f"* Selected (N={top_n_features}) features:")
+print(fs.getSelectedFeatures(top_n_features))
 
