@@ -58,10 +58,10 @@ task = json.load(file)
 
 print(f" 🔑 Task key: {task['id']}")
 
-print(f" 🧪 Getting experiment details...")
+print(f" 🧪 Getting experiment details (TaskId = {task['id']})")
 client = NetScienceClient(netscience_config['BASE_URL'], netscience_config['USERNAME'], netscience_config['PASSWORD'],netscience_config['TASKS_BASE_PATH'], logging=logging)
-task = client.get_experiment(task['id'])
 
+task = client.get_experiment(task['id'])
 p = task['parameters']
 p['dataset_id'] = task['dataset_id']
 dataset_task_path = os.path.join(netscience_config['TASKS_BASE_PATH'], task['dataset_id'])
@@ -75,6 +75,7 @@ dataset_id = p['dataset_id']
 dataset_path = p['dataset_path']
 
 data_partition_training = p['data_partition_training'] / 100
+data_partition_reference = p['data_partition_reference']
 
 rnn_length = p['rnn_length']
 
@@ -84,6 +85,7 @@ params = {
     'dataset_id': dataset_id,
     'dataset_path': dataset_path,
     'data_partition_training': data_partition_training,
+    'data_partition_reference': data_partition_reference,
     'rnn_length': rnn_length,
     'debug': debug,
 }
@@ -93,11 +95,6 @@ print('')
 print(f" ⚙️ Task parameters (after parsing):")
 utils.print_generic_parameters(params)
 
-print('')
-
-print(f" 🍕 Data partition:")
-
-print(f"  → Train size (proportion): {data_partition_training}")
 print()
 
 #Dataset object
@@ -127,8 +124,27 @@ print()
 #Using dataset with NaN values dropped
 dataset = Dataset(df)
 
+print(f" 🍕 Data partition:")
+
+effective_data_train_percentage = data_partition_training
+
+if (data_partition_reference == 'anomalous'):
+    print(f"  * Data partition referenced only on anomalous samples was detected.")
+    print(f"  * This approach is a indirect way to do data partitioning.")
+    
+    effective_data_train_percentage = dataset.get_effective_percentage_from_anomalous_percentage(data_partition_training)
+    print(f"  * In order to have {data_partition_training*100}% of anomalous data points in the training partition")
+    print(f"    will applied a effective data train of {effective_data_train_percentage}%")          
+
+print()
+
+print(f"  → Requested Train size (proportion): {data_partition_training}")
+print(f"  ⛔️ Effective Train size (proportion): {effective_data_train_percentage}")
+print(f"  ⛔️ Effective Testing size (proportion): {1-effective_data_train_percentage}")
+print()
+
 #New Dataset with partition column
-new_df = dataset.get_df_with_partition_column(data_partition_training)
+new_df = dataset.get_df_with_partition_column(effective_data_train_percentage)
 print(f" 📊 Stats of the dataset with partition column")
 print(f"  → Training: {len(new_df.loc[new_df['TRAIN'] == 1])}")
 print(f"  → Testing: {len(new_df.loc[new_df['TRAIN'] == 0])}")
@@ -144,7 +160,7 @@ new_df.to_csv(DATASET_FILENAME)
 print()
 
 #Train Dataset
-tr_dataset = dataset.get_training_sample(data_partition_training)
+tr_dataset = dataset.get_training_sample(effective_data_train_percentage)
 
 print(f" 📊 Stats of the TRAINING sample:")
 print(f"  → Regular: {tr_dataset.count_regular_data_points()}")
@@ -156,7 +172,7 @@ print()
 print()
 
 #Testing Dataset
-ts_dataset = dataset.get_testing_sample(data_partition_training)
+ts_dataset = dataset.get_testing_sample(effective_data_train_percentage)
 print(f" 📊 Stats of the TESTING sample:")
 print(f"  → Regular: {ts_dataset.count_regular_data_points()}")
 print(f"  → Anomalous: {ts_dataset.count_anomalous_data_points()}")
