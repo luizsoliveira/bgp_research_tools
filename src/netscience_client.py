@@ -73,7 +73,8 @@ class NetScienceClient:
     def do_auth(self):
 
         headers= {
-            'Content-Profile': 'public'
+            'Content-Profile': 'public',
+            'Cache-Control': 'no-cache'
         }
 
         data = {
@@ -109,7 +110,8 @@ class NetScienceClient:
         self.check_authentication()
 
         headers = {
-            'Authorization': f"Bearer {self.token}"
+            'Authorization': f"Bearer {self.token}",
+            'Cache-Control': 'no-cache'
         }
 
         data = {
@@ -146,7 +148,8 @@ class NetScienceClient:
             'accept': 'application/json',
             'Prefer': 'return=representation',
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {self.token}"
+            'Authorization': f"Bearer {self.token}",
+            'Cache-Control': 'no-cache'
         }
 
         data = {
@@ -218,7 +221,8 @@ class NetScienceClient:
         self.check_authentication()
 
         headers = {
-            'Authorization': f"Bearer {self.token}"
+            'Authorization': f"Bearer {self.token}",
+            'Cache-Control': 'no-cache'
         }
 
         data = {
