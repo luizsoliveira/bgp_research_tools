@@ -5,12 +5,13 @@ import shutil
 def print_task_parameters(task):
         print("  → {:<30} {:<30}".format('Parameter','Value'))
         for param, value in task['parameters'].items():
+            if value is None: value = ""
             print("  → {:<30} {:<30}".format(param, value))
 
 def print_generic_parameters(params):
         print("  → {:<30} {}".format('Parameter','Value'))
         for param, value in params.items():
-            # print("  → {:<30} {:<30}".format(param, value))
+            if value is None: value = ""
             print("  → {:<30} {}".format(param, value))
 
 def zipdir(path, ziph):
