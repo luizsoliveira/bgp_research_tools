@@ -88,9 +88,9 @@ anomalous_time_end = p['anomalous_time_end']
 
 fe_system = p['fe_system']
 
-filter_asn = False if p['filter_asn'] is None else p['filter_asn']
-filter_ipv4 = False if p['filter_ipv4'] is None else p['filter_ipv4']
-filter_ipv6 = False if p['filter_ipv6'] is None else p['filter_ipv6']
+filter_asn = False if ('filter_asn' not in p or p['filter_asn'] is None) else p['filter_asn']
+filter_ipv4 = False if ('filter_ipv4' not in p or p['filter_ipv4'] is None) else p['filter_ipv4']
+filter_ipv6 = False if ('filter_ipv6' not in p or p['filter_ipv6'] is None) else p['filter_ipv6']
 
 filter_asn = str(filter_asn).split(":") if filter_asn else []
 filter_ipv4 = str(filter_ipv4).split(",") if filter_ipv4 else []
