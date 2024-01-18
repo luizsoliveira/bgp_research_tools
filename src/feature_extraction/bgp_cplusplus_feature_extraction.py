@@ -98,7 +98,6 @@ class BGPCPlusPlusFeatureExtraction:
         cmd = \
             f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; " +\
             f"{path_cplusplus_tool}/bin/mrtprocessor " +\
-            f"-asnfilt \"513:3320:702:5377:8207:8207:15595\" " +\
             f"-np -T -o {file_path_out} -f {file_path}"
         print(f"{cmd}\n")
         try:
@@ -133,7 +132,7 @@ class BGPCPlusPlusFeatureExtraction:
             print(msg)
             self.log_error(msg)
 
-    def extract_features_from_files(self, files_dict, file_path_out):
+    def extract_features_from_files(self, files_dict, file_path_out, filter_by_asn=[], filter_by_ipv4=[],filter_by_ipv6=[]):
 
         input_files = []
         #Checking files_dict and creating input_files
@@ -155,8 +154,11 @@ class BGPCPlusPlusFeatureExtraction:
             f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; " +\
             f"{path_cplusplus_tool}/bin/mrtprocessor " +\
             f"-T -o {file_path_out} " + \
+            (f"-asnfilt \"{':'.join(filter_by_asn)}\" " if len(filter_by_asn) > 0 else "")+ \
+            (f"-nlriv4filt \"{':'.join(filter_by_ipv4)}\" " if len(filter_by_ipv4) > 0 else "")+ \
             f"-f {' '.join(input_files)}"
-        # print(f"{cmd}\n")
+        
+        print(f" ⚡️ MRTprocessor CMD: {cmd}\n")
         try:
             start_extract_time = time.perf_counter()
             output = subprocess.check_output(cmd, stderr=subprocess.PIPE, shell=True)

@@ -88,9 +88,13 @@ anomalous_time_end = p['anomalous_time_end']
 
 fe_system = p['fe_system']
 
-# data_partition_training = p['data_partition_training'] 
-# data_partition_testing = p['data_partition_testing'] 
-# rnn_length = p['rnn_length']
+filter_asn = False if p['filter_asn'] is None else p['filter_asn']
+filter_ipv4 = False if p['filter_ipv4'] is None else p['filter_ipv4']
+filter_ipv6 = False if p['filter_ipv6'] is None else p['filter_ipv6']
+
+filter_asn = str(filter_asn).split(":") if filter_asn else []
+filter_ipv4 = str(filter_ipv4).split(",") if filter_ipv4 else []
+filter_ipv6 = str(filter_ipv6).split(",") if filter_ipv6 else []
 
 cache_path = netscience_config['CACHE_BASE_PATH'] if p['cache'] == 'activated' else False
 debug = True if p['debug'] == 'activated' else False
@@ -111,6 +115,9 @@ params = {
     'anomalous_datetime_start': anomalous_datetime_start,
     'anomalous_datetime_end': anomalous_datetime_end,
     'fe_system': fe_system,
+    'filter_asn': filter_asn,
+    'filter_ipv4': filter_ipv4,
+    'filter_ipv6': filter_ipv6,
     'cache_path': cache_path,
     'debug': debug
 
@@ -259,7 +266,7 @@ elif fe_system == 'c_plusplus':
         file_path_out = file_path_out.replace('mrt', 'features')
         file_path_out = re.sub('\.\d{4}\.gz', '.features', file_path_out)
         print(f"Extracting {len(bucket)} files of the bucket {key} and writing in {file_path_out}")
-        file_extract = extractor.extract_features_from_files(bucket, file_path_out)
+        file_extract = extractor.extract_features_from_files(bucket, file_path_out, filter_asn, filter_ipv4, filter_ipv6)
         if file_extract:
             extracted_files.append(file_extract)
             extract_i+=1
