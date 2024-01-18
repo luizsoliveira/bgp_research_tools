@@ -1,8 +1,8 @@
 cd /opt/bgp_research_tools/src/feature_extraction/mrtprocessor/repo/src/mrtprocessor/
+git switch dev-2.0 -f
+# git checkout c100c21 -f
 git stash
 git pull
-#Edit file CMakeLists.txt
-# sed -i -e 's|/Users/ballanty/.local|/opt/bgp_research_tools/src/feature_extraction/mrtprocessor|g' ./CMakeLists.txt
 sed -i -e 's|$ENV{HOME}/.local|/opt/bgp_research_tools/src/feature_extraction/mrtprocessor|g' ./CMakeLists.txt
 cmake .
 make
