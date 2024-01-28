@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import datetime
+import time
 
 src_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(src_dir)
@@ -40,13 +41,23 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
     
     extractor = BGPCPlusPlusFeatureExtraction()
     downloaded_files = []
+
+    start_download_time = time.perf_counter()
     
     for file in data_download(datetime_start, datetime_end, rrc, site_collection, max_concurrent_requests):
         print(f"File downloaded: {file['file_path']}")
         downloaded_files.append(file)
 
+    finish_download_time = time.perf_counter()
+    print(f"Were obtained {len(downloaded_files)} files in {finish_download_time-start_download_time:.2f} seconds.")
+
+    start_parse_time = time.perf_counter()
+
     file_extract = extractor.extract_features_from_files(downloaded_files, output_file) #, filter_asn, filter_ipv4, filter_ipv6
+    
     if file_extract:
+        finish_parse_time = time.perf_counter()
+        print(f"Were parsed one file in {finish_parse_time-start_parse_time:.2f} seconds.")
         return file_extract
     else:
         os.exit(f"Error during extracting file: {output_file} ")
