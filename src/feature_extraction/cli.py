@@ -92,5 +92,5 @@ if __name__ == "__main__":
         print(f"The output_file name was adjusted to \"{output_file}\".")
 
     # print(datetime_start, datetime_end)
-    file_extract = data_download_and_extract(args.output_file, datetime_start, datetime_end, args.rrc, args.site_collection, args.max_concurrent_requests)
+    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, args.rrc, args.site_collection, args.max_concurrent_requests)
     print(file_extract)
