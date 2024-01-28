@@ -15,6 +15,24 @@ apt -y install python3-pip
 python3 -m pip install -r src/requirements.txt
 ```
 
+## Instaling on HPC (CEDAR)
+
+```bash
+git clone https://github.com/luizsoliveira/bgp_research_tools
+cd bgp_research_tools
+apt -y install python3-pip
+python3 -m pip install -r src/requirements.txt
+```
+
+## Running on HPC (CEDAR)
+
+```bash
+module load python/3.10
+module load scipy-stack
+source ENV/bin/activate
+python3.10 src/feature_extraction/cli.py --from 20230101T080000 --to 20230101T090000 --output ../output.txt
+```
+
 ## RIPE Client
 
 Client to facilitate downloading MRT files from the RIPE repository.
