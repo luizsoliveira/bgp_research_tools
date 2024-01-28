@@ -15,15 +15,6 @@ apt -y install python3-pip
 python3 -m pip install -r src/requirements.txt
 ```
 
-## Instaling on HPC (CEDAR)
-
-```bash
-git clone https://github.com/luizsoliveira/bgp_research_tools
-cd bgp_research_tools
-apt -y install python3-pip
-python3 -m pip install -r src/requirements.txt
-```
-
 ## Running on HPC (CEDAR)
 
 ```bash
