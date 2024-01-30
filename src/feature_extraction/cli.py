@@ -45,8 +45,12 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
     start_download_time = time.perf_counter()
     
     for file in data_download(datetime_start, datetime_end, rrc, site_collection, max_concurrent_requests):
-        print(f"File downloaded: {file['file_path']}")
-        downloaded_files.append(file)
+        if (file and file is not None):
+            print(f"File downloaded: {file['file_path']}")
+            downloaded_files.append(file)
+        else:
+            print(file)
+            os._exit(f"Unexpected value returned from download.")
 
     finish_download_time = time.perf_counter()
     print(f"Were obtained {len(downloaded_files)} files in {finish_download_time-start_download_time:.2f} seconds.")
