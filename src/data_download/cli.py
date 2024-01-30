@@ -16,7 +16,7 @@ def convert_datetime(date_time_input):
         os.exit(f"ABORTING: ERROR. The input \"{date_time_input}\" does not match format {format}.")
 
 def data_download(datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32):
-    client = RIPEClient(max_concurrent_requests=32)
+    client = RIPEClient(max_concurrent_requests=32, debug=True)
     return client.download_updates_interval_files(datetime_start,
                                             datetime_end, int(rrc))
     
