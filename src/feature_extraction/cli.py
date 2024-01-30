@@ -37,20 +37,20 @@ def split_interval_per_day(datetime_start, datetime_end, day_number):
     return new_datetime_start, new_datetime_end
 
 
-def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32):
+def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False):
     
     extractor = BGPCPlusPlusFeatureExtraction()
     downloaded_files = []
 
     start_download_time = time.perf_counter()
     
-    for file in data_download(datetime_start, datetime_end, rrc, site_collection, max_concurrent_requests):
+    for file in data_download(datetime_start, datetime_end, rrc=rrc, site_collection=site_collection, max_concurrent_requests=max_concurrent_requests, cacheLocation=cacheLocation):
         if (file and file is not None):
             print(f"File downloaded: {file['file_path']}")
             downloaded_files.append(file)
         else:
             print(file)
-            os._exit(f"Unexpected value returned from download.")
+            sys.exit(f"Unexpected value returned from download.")
 
     finish_download_time = time.perf_counter()
     print(f"Were obtained {len(downloaded_files)} files in {finish_download_time-start_download_time:.2f} seconds.")
@@ -64,7 +64,7 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
         print(f"Were parsed one file in {finish_parse_time-start_parse_time:.2f} seconds.")
         return file_extract
     else:
-        os.exit(f"Error during extracting file: {output_file} ")
+        sys.exit(f"Error during extracting file: {output_file} ")
 
 if __name__ == "__main__":
 
@@ -76,6 +76,7 @@ if __name__ == "__main__":
     parser.add_argument('--to', dest='datetime_end', type=str, required=True, help='Choose a datetime to start download in the format: yyyymmddThhmmss. Example: 20030521T080100 ')
     parser.add_argument('--rrc', dest='rrc', type=int, default=4, help='Choose a RRC')
     parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=32, help='Choose a number of max concurrent requests')
+    parser.add_argument('--mrt-cache-directory', dest='mrt_cache_directory', type=str, default=False, help='Directory location to save and retrieve (cache) the downloaded MRT files.')
 
     #Extraction arguments
     parser.add_argument('--output', dest='output_file', type=str, required=True, help='Choose a number of max concurrent requests')
@@ -96,5 +97,5 @@ if __name__ == "__main__":
         print(f"The output_file name was adjusted to \"{output_file}\".")
 
     # print(datetime_start, datetime_end)
-    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, args.rrc, args.site_collection, args.max_concurrent_requests)
+    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory)
     print(file_extract)

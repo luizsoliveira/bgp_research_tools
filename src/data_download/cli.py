@@ -13,10 +13,10 @@ def convert_datetime(date_time_input):
     try:
         return datetime.strptime(date_time_input, format)
     except ValueError:
-        os.exit(f"ABORTING: ERROR. The input \"{date_time_input}\" does not match format {format}.")
+        sys.exit(f"ABORTING: ERROR. The input \"{date_time_input}\" does not match format {format}.")
 
-def data_download(datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32):
-    client = RIPEClient(max_concurrent_requests=32, debug=True)
+def data_download(datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False):
+    client = RIPEClient(max_concurrent_requests=32, debug=True, cacheLocation=cacheLocation)
     return client.download_updates_interval_files(datetime_start,
                                             datetime_end, int(rrc))
     
@@ -29,12 +29,13 @@ if __name__ == "__main__":
     parser.add_argument('--to', dest='datetime_end', type=str, required=True, help='Choose a datetime to start download in the format: yyyymmddThhmmss. Example: 20030521T080100 ')
     parser.add_argument('--rrc', dest='rrc', type=int, default=4, help='Choose a RRC')
     parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=32, help='Choose a number of max concurrent requests')
+    parser.add_argument('--mrt-cache-directory', dest='mrt_cache_directory', type=str, default=False, help='Directory location to save and retrieve (cache) the downloaded MRT files.')
 
     args = parser.parse_args()
 
     datetime_start = convert_datetime(args.datetime_start)
     datetime_end = convert_datetime(args.datetime_end)
 
-    for file in data_download(datetime_start, datetime_end, args.rrc, args.site_collection, args.max_concurrent_requests):
+    for file in data_download(datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory):
         print(file['file_path'])
     
