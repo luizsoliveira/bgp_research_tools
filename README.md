@@ -15,13 +15,24 @@ apt -y install python3-pip
 python3 -m pip install -r src/requirements.txt
 ```
 
-## Running on HPC (CEDAR)
+## Instaling on HPC (CEDAR)
 
 ```bash
+# Downloading python code
+git clone https://github.com/luizsoliveira/bgp_research_tools
+cd bgp_research_tools
+# Loading modules python3.10 and scipy-stack
 module load python/3.10
 module load scipy-stack
+# Creating a virtual environment on the folder ENV
+virtualenv --no-download ENV
+# Activating the virtual environment created
 source ENV/bin/activate
-python3.10 src/feature_extraction/cli.py --from 20230101T080000 --to 20230101T090000 --output ../output.txt
+# Updating pip in the environment
+pip install --no-index --upgrade pip
+# Installing the required python packages, 
+python3.10 -m pip install -r src/requirements.txt --no-index
+# The --no-index option tells pip to not install from PyPI, but instead to install only from locally available packages, i.e. CEDAR wheels.
 ```
 
 ## RIPE Client
