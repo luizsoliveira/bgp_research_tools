@@ -149,13 +149,13 @@ class BGPCPlusPlusFeatureExtraction:
         self.create_path_if_not_exists(head)
 
         path_cplusplus_tool = os.path.dirname(os.path.abspath(__file__)) + "/mrtprocessor"
-        #f"-asnfilt \"513:3320:702:5377:8207:8207:15595\" "+\
+        
         cmd = \
             f"export DYLD_LIBRARY_PATH={path_cplusplus_tool}/lib ; " +\
             f"{path_cplusplus_tool}/bin/mrtprocessor " +\
             f"-T -o {file_path_out} " + \
             (f"-asnfilt \"{':'.join(filter_by_asn)}\" " if len(filter_by_asn) > 0 else "")+ \
-            (f"-nlriv4filt \"{':'.join(filter_by_ipv4)}\" " if len(filter_by_ipv4) > 0 else "")+ \
+            (f"-nlriv4filt \"{','.join(filter_by_ipv4)}\" " if len(filter_by_ipv4) > 0 else "")+ \
             f"-f {' '.join(input_files)}"
         
         print(f" ⚡️ MRTprocessor CMD: {cmd}\n")
