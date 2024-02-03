@@ -33,7 +33,7 @@ from data_download.clients.ripe_client import RIPEClient
 from data_parse.python_mrt_parser import PythonMRTParser
 from feature_extraction.bgp_csharp_feature_extraction import BGPCSharpFeatureExtraction
 from feature_extraction.bgp_cplusplus_feature_extraction import BGPCPlusPlusFeatureExtraction
-from data_aggregation.merge_files import merge_files
+from data_merging.merge_files import merge_files
 from data_labeling.anomalous_and_regular_data_labeling import AnomalousAndRegularDataLabeling
 
 # LOADING ENV FILE
