@@ -13,7 +13,14 @@ def append_suffix_on_filename(filename, suffix):
     name, ext = os.path.splitext(filename)
     return f"{name}_{suffix}{ext}"
 
-def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False):
+def convert_parameter_list(input, separator=":"):
+    if (input and len(input) > 0):
+        # input = input.strip('"')
+        return input.split(separator)
+    else:
+        return []
+
+def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False, asnfilt=[], nlriv4filt=[]):
     
     extractor = BGPCPlusPlusFeatureExtraction()
     downloaded_files = []
@@ -33,7 +40,12 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
 
     start_parse_time = time.perf_counter()
 
-    file_extract = extractor.extract_features_from_files(downloaded_files, output_file) #, filter_asn, filter_ipv4, filter_ipv6
+    file_extract = extractor.extract_features_from_files(
+            downloaded_files,
+            output_file,
+            filter_by_asn=asnfilt,
+            filter_by_ipv4=nlriv4filt
+    )
     
     if file_extract:
         finish_parse_time = time.perf_counter()
@@ -56,7 +68,9 @@ if __name__ == "__main__":
     parser.add_argument('--day', dest='day_number', type=int, required=False, default=False, help='In case of distributed processing, choose the day number of the slice that will be processed.')
 
     #Extraction arguments
-    parser.add_argument('--output', dest='output_file', type=str, required=True, help='Choose a number of max concurrent requests')
+    parser.add_argument('--output', dest='output_file', type=str, required=True, help='Choose the file output location.')
+    parser.add_argument('--asnfilt', dest='asnfilt', type=str, required=False, default=False, help='Choose list of Autonomous System Numbers (ASNs) to be used to filter the BGP update messages.')
+    parser.add_argument('--nlriv4filt', dest='nlriv4filt', type=str, required=False, default=False, help='Choose list of Network Layer Reachability Information (NLRI) IPv4 to be used to filter the BGP update messages.')
     
     
     args = parser.parse_args()
@@ -66,6 +80,9 @@ if __name__ == "__main__":
 
     output_file = args.output_file
 
+    asnfilt = convert_parameter_list(args.asnfilt)
+    nlriv4filt = convert_parameter_list(args.nlriv4filt, ",")
+    
     if (args.day_number):
         datetime_start, datetime_end = split_interval_per_day(datetime_start, datetime_end, args.day_number)
         print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively.")
@@ -74,5 +91,5 @@ if __name__ == "__main__":
         print(f"The output_file name was adjusted to \"{output_file}\".")
 
     # print(datetime_start, datetime_end)
-    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory)
+    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory, asnfilt=asnfilt, nlriv4filt=nlriv4filt)
     print(file_extract)
