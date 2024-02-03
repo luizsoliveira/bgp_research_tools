@@ -29,7 +29,7 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
     
     for file in data_download(datetime_start, datetime_end, rrc=rrc, site_collection=site_collection, max_concurrent_requests=max_concurrent_requests, cacheLocation=cacheLocation):
         if (file and file is not None):
-            print(f"File downloaded: {file['file_path']}")
+            # print(f"File downloaded: {file['file_path']}")
             downloaded_files.append(file)
         else:
             print(file)
