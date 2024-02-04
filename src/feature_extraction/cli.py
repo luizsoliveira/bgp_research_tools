@@ -89,7 +89,7 @@ if __name__ == "__main__":
         datetime_start, datetime_end = split_interval_into_slices(datetime_start, datetime_end, args.slice_number, args.slice_duration_hours)
         print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively. Considering slice_number={args.slice_number} and slice_duration_hours={args.slice_duration_hours}.")
         
-        output_file = append_suffix_on_filename(output_file, args.day_number)
+        output_file = append_suffix_on_filename(output_file, args.slice_number)
         print(f"The output_file name was adjusted to \"{output_file}\".")
 
     # print(datetime_start, datetime_end)
