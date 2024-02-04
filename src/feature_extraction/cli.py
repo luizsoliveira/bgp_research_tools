@@ -6,7 +6,7 @@ import time
 src_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(src_dir)
 
-from data_download.cli import data_download, convert_datetime, split_interval_per_day
+from data_download.cli import data_download, convert_datetime, split_interval_into_slices
 from feature_extraction.bgp_cplusplus_feature_extraction import BGPCPlusPlusFeatureExtraction
 
 def append_suffix_on_filename(filename, suffix):
@@ -65,7 +65,8 @@ if __name__ == "__main__":
     parser.add_argument('--rrc', dest='rrc', type=int, default=4, help='Choose a RRC')
     parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=32, help='Choose a number of max concurrent requests')
     parser.add_argument('--mrt-cache-directory', dest='mrt_cache_directory', type=str, default=False, help='Directory location to save and retrieve (cache) the downloaded MRT files.')
-    parser.add_argument('--day', dest='day_number', type=int, required=False, default=False, help='In case of distributed processing, choose the day number of the slice that will be processed.')
+    parser.add_argument('--slice', dest='slice_number', type=int, required=False, default=False, help='In case of distributed processing, choose the slice number of the total period that will be processed.')
+    parser.add_argument('--slice-duration-hours', dest='slice_duration_hours', type=int, required=False, default=24, help='In case of distributed processing, choose the duration in HOURS of each slice that will be considered in the split step.')
 
     #Extraction arguments
     parser.add_argument('--output', dest='output_file', type=str, required=True, help='Choose the file output location.')
@@ -83,9 +84,10 @@ if __name__ == "__main__":
     asnfilt = convert_parameter_list(args.asnfilt)
     nlriv4filt = convert_parameter_list(args.nlriv4filt, ",")
     
-    if (args.day_number):
-        datetime_start, datetime_end = split_interval_per_day(datetime_start, datetime_end, args.day_number)
-        print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively.")
+    # is not False is different from True. Example slice_number=0
+    if (args.slice_number is not False):
+        datetime_start, datetime_end = split_interval_into_slices(datetime_start, datetime_end, args.slice_number, args.slice_duration_hours)
+        print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively. Considering slice_number={args.slice_number} and slice_duration_hours={args.slice_duration_hours}.")
         
         output_file = append_suffix_on_filename(output_file, args.day_number)
         print(f"The output_file name was adjusted to \"{output_file}\".")

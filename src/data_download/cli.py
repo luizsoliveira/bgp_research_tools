@@ -23,7 +23,8 @@ def split_interval_into_slices(datetime_start, datetime_end, slice_number, slice
 
     # Calculate the total period in hours and split by the slice_duration_hours 
     max_slices = math.ceil(((datetime_end - datetime_start).total_seconds()/3600) / slice_duration_hours)
-    print(slice_number)
+    
+    # print(slice_number)
     if (slice_number < 1 or slice_number > max_slices):
         sys.exit(f"ABORTING: For the datetime interval provided the slice_number must be between 1 and {max_slices}. Instead, {slice_number} was provided.")
 
