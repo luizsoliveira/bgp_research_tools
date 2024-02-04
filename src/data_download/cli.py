@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import datetime
+import math
 
 src_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(src_dir)
@@ -15,24 +16,23 @@ def convert_datetime(date_time_input):
     except ValueError:
         sys.exit(f"ABORTING: ERROR. The input \"{date_time_input}\" does not match format {format}.")
 
-def split_interval_per_day(datetime_start, datetime_end, day_number):
+def split_interval_into_slices(datetime_start, datetime_end, slice_number, slice_duration_hours=24):
 
     if (datetime_end <= datetime_start):
         sys.exit(f"ABORTING: The datetime_end must be greater than datetime_start. Instead, a bigger datetime_start was provided.")
 
-    difference_days = (datetime_end.date() - datetime_start.date()).days + 1
+    # Calculate the total period in hours and split by the slice_duration_hours 
+    max_slices = math.ceil(((datetime_end - datetime_start).total_seconds()/3600) / slice_duration_hours)
+    print(slice_number)
+    if (slice_number < 1 or slice_number > max_slices):
+        sys.exit(f"ABORTING: For the datetime interval provided the slice_number must be between 1 and {max_slices}. Instead, {slice_number} was provided.")
+
+    # Beginning of the desired slice
+    new_datetime_start = datetime_start + datetime.timedelta(hours=((slice_number - 1) * slice_duration_hours))
     
-    if (day_number < 1 or day_number > difference_days):
-        sys.exit(f"ABORTING: For the datetime interval provided the day_number must be between 1 and {difference_days}. Instead, {day_number} was provided.")
-
-    # First second of the desired day
-    new_datetime_start = datetime_start.replace(hour=0, minute=0, second=0) + datetime.timedelta(days=(day_number - 1))
-    # In case of the first day, use the time provided by the parameter datetime_start
-    new_datetime_start = max(new_datetime_start, datetime_start)
-
-    # Last second of the desired day
-    new_datetime_end = datetime_start.replace(hour=23, minute=59, second=59) + datetime.timedelta(days=(day_number - 1))
-    # In case of the first day, use the time provided by the parameter datetime_end
+    # Ending of the desired slice
+    new_datetime_end = datetime_start + datetime.timedelta(hours=((slice_number) * slice_duration_hours), seconds=-1)
+    # In case of the last slice, use the time provided by the parameter datetime_end
     new_datetime_end = min(new_datetime_end, datetime_end)
 
     return new_datetime_start, new_datetime_end
@@ -52,16 +52,18 @@ if __name__ == "__main__":
     parser.add_argument('--rrc', dest='rrc', type=int, default=4, help='Choose a RRC')
     parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=32, help='Choose a number of max concurrent requests')
     parser.add_argument('--mrt-cache-directory', dest='mrt_cache_directory', type=str, default=False, help='Directory location to save and retrieve (cache) the downloaded MRT files.')
-    parser.add_argument('--day', dest='day_number', type=int, required=False, default=False, help='In case of distributed processing, choose the day number of the slice that will be processed.')
+    parser.add_argument('--slice', dest='slice_number', type=int, required=False, default=False, help='In case of distributed processing, choose the slice number of the total period that will be processed.')
+    parser.add_argument('--slice-duration-hours', dest='slice_duration_hours', type=int, required=False, default=24, help='In case of distributed processing, choose the duration in HOURS of each slice that will be considered in the split step.')
 
     args = parser.parse_args()
 
     datetime_start = convert_datetime(args.datetime_start)
     datetime_end = convert_datetime(args.datetime_end)
 
-    if (args.day_number):
-        datetime_start, datetime_end = split_interval_per_day(datetime_start, datetime_end, args.day_number)
-        print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively.")
+    # is not False is different from True. Example slice_number=0
+    if (args.slice_number is not False):
+        datetime_start, datetime_end = split_interval_into_slices(datetime_start, datetime_end, args.slice_number, args.slice_duration_hours)
+        print(f"The datetime_start and datetime_end were adjusted to {datetime_start} and {datetime_end}, respectively. Considering slice_number={args.slice_number} and slice_duration_hours={args.slice_duration_hours}.")
 
     for file in data_download(datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory):
         print(file['file_path'])
