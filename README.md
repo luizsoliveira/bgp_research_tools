@@ -1,13 +1,13 @@
 # BGP Research Tools
 
 A toolkit to help researchers work with BGP data, providing a CLI, clients, parsers, and other tools.
-The code present in this repository can be used on three different abstractions level. 
+The code present in this repository can be used on three different abstraction levels. 
 
 * [SDK](./docs/sdk.md);
 * [CLI](./docs/cli.md);
 * Webapp
 
-More information about how to use are available depending of the abstraction level desired.
+More information about using it is available depending on the desired abstraction level.
 
 ## Instaling
 
