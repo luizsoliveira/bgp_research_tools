@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+import numpy as np
+from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
 
 class Dataset:
@@ -34,6 +36,9 @@ class Dataset:
             raise Exception(f"Aborting: The dataset needs to have a {self.target_column} column (target column)")
         
     def removeUndesiredColumns(self, df):
+        return df.drop(['HOUR', 'MINUTE', 'SECOND'], axis=1, errors='ignore')
+    
+    def removeUndesiredColumnsForTraining(self, df):
         return df.drop(['HOUR', 'MINUTE', 'SECOND', 'TRAIN'], axis=1, errors='ignore')
     
     # Returns a DataFrame with the Dataset plus a TRAIN column
@@ -89,6 +94,23 @@ class Dataset:
         df = self.removeUndesiredColumns(df)
         return Dataset(df)
     
+    def get_normalized_zscore_dataset(self, ddof=1):
+        # Get all numeric columns
+        features_cols = list(self.df.select_dtypes(include=[np.number]).columns)
+        # Remove POSIXTIME column
+        features_cols.remove('POSIXTIME')
+        # Remove target column
+        features_cols.remove(self.target_column)
+        # Removing TRAIN column (if exists)         
+        if 'TRAIN' in features_cols: features_cols.remove('TRAIN')
+        # # Apply Zscore normalization in all columns (features) except POSIXTIME, TARGET and TRAIN (if exists)
+        for column in features_cols:
+            print(f" Applying zscore normalization for column {column}")
+            self.df[column] = zscore(self.df[column], ddof=ddof)
+        self.df.info()
+        return Dataset(self.df)
+        
+    
     def count_regular_data_points(self, regular_value=0):
         return len(self.df.loc[self.df[self.target_column] == regular_value])
     
@@ -125,6 +147,16 @@ class Dataset:
         # The use of x and y variables are a convention in ML codes
         y = self.df[self.target_column]
         x = self.df.drop(self.target_column, axis = 1)
+        return x, y
+    
+    def get_x_y_numpy(self):
+        x, y = self.get_x_y()
+        return np.array(x), np.array(y)
+    
+    def get_x_y_numpy_normalized_zscore(self):
+        x, y = self.get_x_y_numpy()
+        x = zscore(x, axis=0, ddof=1)
+        y = zscore(y, axis=0, ddof=1)
         return x, y
     
     def save_to_file(self, path = './DATASET.CSV'):
