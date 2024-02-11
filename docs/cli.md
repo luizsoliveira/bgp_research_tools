@@ -1,8 +1,8 @@
 The Command Line Interface (CLI) provided in this repository offers the following modules:
 
-Dataset creation
-* Data Download
-* Feature Extraction
+[Dataset creation](#dataset-creation)
+* [Data Download](#data-downloading)
+* [Feature Extraction](#feature-extraction)
 * Data merging
 * Data labeling
 
@@ -21,8 +21,7 @@ Model Training
 ## Data downloading
 
 #### Choosing site collection, RRC, and time interval
-  
-```bash
+```console
 python src/data_download/cli.py --rrc 4 \
 --from 20230101T000000 --to 20230102T235959 
 ```
@@ -31,8 +30,7 @@ python src/data_download/cli.py --rrc 4 \
 * The files will be downloaded in a temporary folder provided by the operational system.
 
 #### Choosing a cache location
-
-```bash
+```console
 python src/data_download/cli.py --rrc 4 \
 --from 20230101T000000 --to 20230102T235959 \
 --mrt-cache-directory ~/cache
@@ -42,7 +40,7 @@ python src/data_download/cli.py --rrc 4 \
 
 #### Choosing the max number of concurrent requests
 
-```bash
+```console
 python src/data_download/cli.py --rrc 4 \
 --from 20230101T000000 --to 20230102T235959 \
 --mrt-cache-directory ~/cache
@@ -54,7 +52,7 @@ python src/data_download/cli.py --rrc 4 \
 This CLI offers valuable resources when distributing the data download into several nodes. In this way, it is possible to specify that each node will download a chunk of the total period requested. This chunk corresponds to some interval of hours. The default value is 24 hours.
 
 #### Specifying a chunk number
-```bash
+```console
 python src/data_download/cli.py --rrc 4 \
 --from 20230101T000000 --to 20240128T235959 \
 --mrt-cache-directory ~/cache \
@@ -67,7 +65,7 @@ python src/data_download/cli.py --rrc 4 \
 
 #### Specifying the chunk duration
 
-```bash
+```console
 python src/data_download/cli.py --rrc 4 \
 --from 20230101T000000 --to 20240128T235959 \
 --mrt-cache-directory ~/cache \
@@ -78,7 +76,7 @@ python src/data_download/cli.py --rrc 4 \
 * Passing `--chunk 0` returns: "ABORTING: For the datetime interval provided the chunk_number must be between 1 and 2358. Instead, 0 was provided."
 
 Additional information is available through --help switch.
-```bash
+```console
 python src/data_download/cli.py --help                                                
 ```
 
@@ -91,7 +89,7 @@ To make it easy to use this CLI, the data download step was totally integrated 
 This CLI runs the MRTprocessor in the background, which has to be installed to perform feature extraction.
 
 #### Extracting features from a specific site collection, RRC, and time interval
-```bash
+```console
 python src/feature_extraction/cli.py --rrc 0 \
 --from 20230101T000000 --to 20230102T235959 \
 --mrt-cache-directory ~/cache \
@@ -104,7 +102,7 @@ python src/feature_extraction/cli.py --rrc 0 \
 ### Feature extraction using distributed processing
 
 #### Specifying a chunk number
-```bash
+```console
 python src/feature_extraction/cli.py --rrc 4 \
 --from 20230101T000000 --to 20240128T235959 \
 --mrt-cache-directory ~/cache \
@@ -113,7 +111,7 @@ python src/feature_extraction/cli.py --rrc 4 \
 ```
 
 #### Specifying the chunk duration
-```bash
+```console
 python src/feature_extraction/cli.py --rrc 4 \
 --from 20230101T000000 --to 20240128T235959 \
 --mrt-cache-directory ~/cache \
@@ -123,6 +121,6 @@ python src/feature_extraction/cli.py --rrc 4 \
 ```
 
 Additional information available through --help switch.
-```bash
+```console
 python src/feature_extraction/cli.py --help                                                
 ```
