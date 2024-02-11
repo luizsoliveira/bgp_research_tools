@@ -32,6 +32,6 @@ if __name__ == "__main__":
     
     merge_files(files_in, args.output_filename, args.header_line)
 
-    print("Data merging finished. File written in {args.output_filename}.")
+    print(f"Data merging finished. File written in {args.output_filename}.")
 
 

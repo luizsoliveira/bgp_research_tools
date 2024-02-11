@@ -10,7 +10,7 @@ The Command Line Interface (CLI) provided in this repository offers the followin
 * Exploratory data analysis
 * Feature selection
   
-#### Model Training
+#### Machine Learning
 * Data normalization
 * Data partition
 * Batch model training
@@ -75,7 +75,7 @@ python src/data_download/cli.py --rrc 4 \
 * Passing `--chunk 1` returns: "The datetime_start and datetime_end were adjusted to 2023-01-01 00:00:00 and 2023-01-01 03:59:59, respectively. Considering chunk_number=1 and chunk_duration_hours=4."
 * Passing `--chunk 0` returns: "ABORTING: For the datetime interval provided, the chunk_number must be between 1 and 2358. Instead, 0 was provided."
 
-Additional information is available through --help switch.
+Additional information is available through `--help` switch.
 ```console
 python src/data_download/cli.py --help                                                
 ```
@@ -121,7 +121,7 @@ python src/feature_extraction/cli.py --rrc 4 \
 --output ~/datasets/dataset.csv
 ```
 
-Additional information is available through --help switch.
+Additional information is available through `--help` switch.
 ```console
 python src/feature_extraction/cli.py --help                                                
 ```
@@ -164,7 +164,7 @@ The dataset was processed from 2021-01-21 00:00:00 to 2021-01-29 23:59:00 with 0
 Data labeling finished.
 Finished.
 ```
-Additional information is available through --help switch.
+Additional information is available through `--help` switch.
 ```console
 python src/data_merging/cli.py --help
 ```
@@ -177,4 +177,8 @@ python src/data_labeling/cli.py \
 -o ~/datasets/DATASET-LABELED.csv \
 --anomaly-from 20210123T011200 \
 --anomaly-to 20210129T235900
+```
+Additional information is available through `--help` switch.
+```console
+python src/data_labeling/cli.py --help
 ```
