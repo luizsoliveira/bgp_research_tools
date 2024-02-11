@@ -16,7 +16,8 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', dest='output_filename', type=str, required=True, help='Choose the file output location.')
     parser.add_argument('--anomaly-from', dest='anomaly_datetime_start', type=str, required=True, help='Choose the datetime to that started the anomalous data points. Format: yyyymmddThhmmss. Example: 20030521T080100')
     parser.add_argument('--anomaly-to', dest='anomaly_datetime_end', type=str, required=True, help='Choose the datetime to that ended the anomalous data points. Format: yyyymmddThhmmss. Example: 20030521T080100')
-    parser.add_argument('--delimiter', dest='delimiter', type=str, required=False, default=",", help='Choose the delimiter that will be used to parse the input file and to write the output file')
+    parser.add_argument('--delimiter-input', dest='delimiter_input', type=str, required=False, default=" ", help='Choose the field character delimiter that will be used to parse the input file.')
+    parser.add_argument('--delimiter-output', dest='delimiter_output', type=str, required=False, default=",", help='Choose the field character delimiter that will be used to write the output file.')
     
     args = parser.parse_args()
 
@@ -25,7 +26,7 @@ if __name__ == "__main__":
 
     data_labeler = AnomalousAndRegularDataLabeling()
 
-    data_labeler.new_dataset_with_labels(args.input_filename,args.output_filename, anomaly_datetime_start, anomaly_datetime_end, delimiter=args.delimiter)
+    data_labeler.new_dataset_with_labels(args.input_filename,args.output_filename, anomaly_datetime_start, anomaly_datetime_end, delimiter_in=args.delimiter_input, delimiter_out=args.delimiter_output)
     print(f"Data labeling finished. File written in {args.output_filename}.")
 
 
