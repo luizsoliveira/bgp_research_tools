@@ -1,16 +1,16 @@
 The Command Line Interface (CLI) provided in this repository offers the following modules:
 
-[Dataset creation](#dataset-creation)
+#### [Dataset creation](#dataset-creation)
 * [Data Download](#data-downloading)
 * [Feature Extraction](#feature-extraction)
-* Data merging
-* Data labeling
+* [Data merging](#data-merging)
+* [Data labeling](#data-labeling)
 
-Exploratory data analysis and Feature selection
+#### Exploratory data analysis and Feature selection
 * Exploratory data analysis
 * Feature selection
   
-Model Training
+#### Model Training
 * Data normalization
 * Data partition
 * Batch model training
@@ -73,7 +73,7 @@ python src/data_download/cli.py --rrc 4 \
 --chunk-duration-hours 4
 ```
 * Passing `--chunk 1` returns: "The datetime_start and datetime_end were adjusted to 2023-01-01 00:00:00 and 2023-01-01 03:59:59, respectively. Considering chunk_number=1 and chunk_duration_hours=4."
-* Passing `--chunk 0` returns: "ABORTING: For the datetime interval provided the chunk_number must be between 1 and 2358. Instead, 0 was provided."
+* Passing `--chunk 0` returns: "ABORTING: For the datetime interval provided, the chunk_number must be between 1 and 2358. Instead, 0 was provided."
 
 Additional information is available through --help switch.
 ```console
@@ -109,6 +109,7 @@ python src/feature_extraction/cli.py --rrc 4 \
 --chunk 1 \
 --output ~/datasets/dataset.csv
 ```
+* Feature extraction using distributed processing will generate several output files. For every chunk will be added a suffix, for example `~/datasets/dataset-1.csv` for chunk number 1.
 
 #### Specifying the chunk duration
 ```console
@@ -120,7 +121,60 @@ python src/feature_extraction/cli.py --rrc 4 \
 --output ~/datasets/dataset.csv
 ```
 
-Additional information available through --help switch.
+Additional information is available through --help switch.
 ```console
 python src/feature_extraction/cli.py --help                                                
+```
+
+## Data merging
+
+Data merging allows the merging of several output files, which is especially useful when the processing is distributed by several nodes.
+
+```console
+python src/data_merging/cli.py ~/datasets/ripe_dataset_westrock_rrc14_* \
+-o ~/datasets/DATASET.csv
+```
+* The CLI command receives a list of files to do data merging.
+* The parameter `-o` or `--output` specifies the destination of the file resulting from the data merging process.
+* Before reading, the list of files will be sorted using the natural sort algorithm.
+* The sorted list will be displayed.
+* During data merging, the CLI will do some verifications displaying alerts when:
+  * some empty line is found.
+  * some data points are out of order, based on the value found in the first column (POSIXTIME).
+  * some repeated data points' timestamps are found.
+  * some temporal discontinuity is found between two data points.
+
+In the case above, the CLI will display the following output:
+```bash
+Merging the following files:
+ * ~/datasets/ripe_dataset_westrock_rrc14_1.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_2.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_3.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_4.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_5.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_6.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_7.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_8.csv
+ * ~/datasets/ripe_dataset_westrock_rrc14_9.csv
+
+Starting continuity analysis from 2021-01-21 00:00:00.
+
+The dataset was processed from 2021-01-21 00:00:00 to 2021-01-29 23:59:00 with 0 discontinuities detected.
+9 files were merged on ~/datasets/DATASET.csv containing 12,960 data points.
+Data labeling finished.
+Finished.
+```
+Additional information is available through --help switch.
+```console
+python src/data_merging/cli.py --help
+```
+
+## Data labeling
+
+```console
+python src/data_labeling/cli.py \
+-i ~/datasets/DATASET.csv \
+-o ~/datasets/DATASET-LABELED.csv \
+--anomaly-from 20210123T011200 \
+--anomaly-to 20210129T235900
 ```
