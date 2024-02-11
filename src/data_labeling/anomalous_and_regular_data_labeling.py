@@ -31,12 +31,12 @@ class AnomalousAndRegularDataLabeling:
         if self.logging: self.logging.debug(msg)
         if self.debug: print(msg)
 
-    def new_dataset_with_labels(self,dataset_path_in, dataset_path_out, anomalous_datetime_start, anomalous_datetime_end, regular_label=0, anomalous_label=1):
+    def new_dataset_with_labels(self,dataset_path_in, dataset_path_out, anomalous_datetime_start, anomalous_datetime_end, delimiter=' ',regular_label=0, anomalous_label=1):
 
         if not os.path.exists(dataset_path_in):
             raise IOError(f"Dataset file not found in {dataset_path_in}.")
         
-        df = pd.read_csv(dataset_path_in, delimiter=' ')
+        df = pd.read_csv(dataset_path_in, delimiter=delimiter)
 
         df = self.put_labels(df, anomalous_datetime_start, anomalous_datetime_end, regular_label, anomalous_label)
 
