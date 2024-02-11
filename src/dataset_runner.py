@@ -78,7 +78,9 @@ collection_site = p['collection_site']
 ripe_ris_rrc = p['ripe_ris_rrc']
 
 date_start = p['date_start']
+time_start = p['time_start']
 date_end = p['date_end']
+time_end = p['time_end']
 
 anomalous_date_start = p['anomalous_date_start']
 anomalous_date_end = p['anomalous_date_end']
@@ -101,8 +103,8 @@ debug = True if p['debug'] == 'activated' else False
 
 print('')
 
-datetime_start = datetime.strptime(f"{date_start}T000000", "%Y%m%dT%H%M%S")
-datetime_end = datetime.strptime(f"{date_end}T235959", "%Y%m%dT%H%M%S")
+datetime_start = datetime.strptime(f"{date_start}T{time_start}00", "%Y%m%dT%H%M%S")
+datetime_end = datetime.strptime(f"{date_end}T{time_end}59", "%Y%m%dT%H%M%S")
 
 anomalous_datetime_start = datetime.strptime(f"{anomalous_date_start}T{anomalous_time_start}00", "%Y%m%dT%H%M%S")
 anomalous_datetime_end = datetime.strptime(f"{anomalous_date_end}T{anomalous_time_end}59", "%Y%m%dT%H%M%S")
