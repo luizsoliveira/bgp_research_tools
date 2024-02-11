@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--from', dest='datetime_start', type=str, required=True, help='Choose a datetime to start download in the format: yyyymmddThhmmss. Example: 20030521T080100 ')
     parser.add_argument('--to', dest='datetime_end', type=str, required=True, help='Choose a datetime to start download in the format: yyyymmddThhmmss. Example: 20030521T080100 ')
     parser.add_argument('--rrc', dest='rrc', type=int, default=4, help='Choose a RRC')
-    parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=32, help='Choose a number of max concurrent requests')
+    parser.add_argument('--max-concurrent-requests', dest='max_concurrent_requests', type=int, default=16, help='Choose a number of max concurrent requests')
     parser.add_argument('--mrt-cache-directory', dest='mrt_cache_directory', type=str, default=False, help='Directory location to save and retrieve (cache) the downloaded MRT files.')
     parser.add_argument('--slice', dest='slice_number', type=int, required=False, default=False, help='In case of distributed processing, choose the slice number of the total period that will be processed.')
     parser.add_argument('--slice-duration-hours', dest='slice_duration_hours', type=int, required=False, default=24, help='In case of distributed processing, choose the duration in HOURS of each slice that will be considered in the split step.')
