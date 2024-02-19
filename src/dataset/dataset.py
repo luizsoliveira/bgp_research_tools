@@ -17,9 +17,11 @@ class Dataset:
             self.df = dataset
 
         # Check Dataset
-        self.checkDataset(self.df)
+        self.checkDataset()
         # Remove undesired columns
         self.df = self.removeUndesiredColumns(self.df)
+        # Casting DATETIME column
+        self.parse_datetime_column()
 
     def openDatasetFromFile(self, dataset_path):
         
@@ -30,16 +32,19 @@ class Dataset:
 
         return df
     
-    def checkDataset(self, df):
-
-        if not self.target_column in df.columns:
+    def checkDataset(self):
+        if not self.target_column in self.df.columns:
             raise Exception(f"Aborting: The dataset needs to have a {self.target_column} column (target column)")
-        
+
+    def parse_datetime_column(self, datetime_column='DATETIME'):
+        if datetime_column in self.df.columns:
+            self.df[datetime_column] = pd.to_datetime(self.df[datetime_column], utc=True)
+
     def removeUndesiredColumns(self, df):
         return df.drop(['HOUR', 'MINUTE', 'SECOND'], axis=1, errors='ignore')
     
     def removeUndesiredColumnsForTraining(self, df):
-        return df.drop(['HOUR', 'MINUTE', 'SECOND', 'TRAIN'], axis=1, errors='ignore')
+        return df.drop(['POSIXTIME','DATETIME','HOUR', 'MINUTE', 'SECOND', 'TRAIN'], axis=1, errors='ignore')
     
     # Returns a DataFrame with the Dataset plus a TRAIN column
     # The TRAIN colum is filled according with train_size
@@ -60,7 +65,7 @@ class Dataset:
         if not (train_lines + test_lines == df_lines):
             raise Exception(f"The sum between number of training lines and testing lines should be equal to total number of lines")
 
-        # # Creating a new and independent copy of the dataset
+        # # Creating a new and independent copy of the dataframe
         # df = self.df.copy(deep=True)
 
         df = self.df
@@ -80,21 +85,32 @@ class Dataset:
 
         return df
     
-    def get_training_sample(self, train_size):
+    def get_train_test_datasets_anomalous_ratio(self, anomalous_train_size):
+        effective_ratio = self.get_effective_percentage_from_anomalous_percentage(anomalous_train_size)
+        print(f"effective_ratio = {effective_ratio}")
+        return self.get_train_test_datasets_effective_ratio(effective_ratio)
+    
+    def get_train_test_datasets_effective_ratio(self, train_size):
+        train = self.get_training_dataset_effective_ratio(train_size)
+        test = self.get_testing_dataset_effective_ratio(train_size)
+        return train, test
+
+    def get_training_dataset_effective_ratio(self, train_size):
         df = self.get_df_with_partition_column(train_size)
-        df = df.dropna()
+        # df = df.dropna()
+        # Investigar aqui
         df = df.loc[df['TRAIN'] == 1]
         df = self.removeUndesiredColumns(df)
         return Dataset(df)
     
-    def get_testing_sample(self, train_size):
+    def get_testing_dataset_effective_ratio(self, train_size):
         df = self.get_df_with_partition_column(train_size)
-        df = df.dropna()
+        # df = df.dropna()
         df = df.loc[df['TRAIN'] == 0]
         df = self.removeUndesiredColumns(df)
         return Dataset(df)
     
-    def get_normalized_zscore_dataset(self, ddof=1):
+    def get_normalized_zscore_dataset(self, ddof=0):
         # Get all numeric columns
         features_cols = list(self.df.select_dtypes(include=[np.number]).columns)
         # Remove POSIXTIME column
@@ -105,9 +121,14 @@ class Dataset:
         if 'TRAIN' in features_cols: features_cols.remove('TRAIN')
         # # Apply Zscore normalization in all columns (features) except POSIXTIME, TARGET and TRAIN (if exists)
         for column in features_cols:
-            print(f" Applying zscore normalization for column {column}")
-            self.df[column] = zscore(self.df[column], ddof=ddof)
-        self.df.info()
+            print(f" Applying zscore normalization for column {column} with ddof={ddof}")
+            # self.df[column] = zscore(self.df[column], ddof=ddof)
+            self.df[column] = (self.df[column] - np.mean(self.df[column])) / np.std(self.df[column])
+            # Filling with zero NaN values.
+            # Were found when all values are 0 the zscore result will be nan for all rows
+            if (self.df[column].isna().any()):
+                print(f"Were found NaN values on column {column} and these values were replaced to zero.")
+                self.df[column].fillna(0, inplace=True)
         return Dataset(self.df)
         
     
@@ -123,6 +144,9 @@ class Dataset:
     # This method was designed for ordered datasets, usually time series dataset
     # which all anomalous data points are located in a single contiguous cluster
     def get_effective_percentage_from_anomalous_percentage(self, anomalous_percentage, anomalous_value=1):
+
+        if (anomalous_percentage < 0 or anomalous_percentage > 1):
+            raise Exception(f"The anomalous_percentage has to be between 0 and 1")
         
         # Total amount of data points
         size_total_sample = self.count_total_data_points()
@@ -145,22 +169,29 @@ class Dataset:
     def get_x_y(self):
         # Separating the dependent and independent variables
         # The use of x and y variables are a convention in ML codes
-        y = self.df[self.target_column]
-        x = self.df.drop(self.target_column, axis = 1)
-        return x, y
-    
-    def get_x_y_numpy(self):
-        x, y = self.get_x_y()
+        df = self.removeUndesiredColumnsForTraining(self.df)
+        y = df[self.target_column]
+        x = df.drop(self.target_column, axis = 1)
         return np.array(x), np.array(y)
     
-    def get_x_y_numpy_normalized_zscore(self):
-        x, y = self.get_x_y_numpy()
-        x = zscore(x, axis=0, ddof=1)
-        y = zscore(y, axis=0, ddof=1)
-        return x, y
-    
+    def get_features_columns(self):
+        df = self.removeUndesiredColumnsForTraining(self.df)
+        df = df.drop(self.target_column, axis = 1)
+        return df.columns
+
     def save_to_file(self, path = './DATASET.CSV'):
         self.df.to_csv(path)
+
+    def __len__(self):
+        return len(self.df)
+    
+    def select_where(self,select_column_name, where_column_name, where_column_value):
+        df = self.df[self.df[where_column_name] == where_column_value]
+        if select_column_name == 'DATETIME':
+            values = df[select_column_name].astype('datetime64[ns, UTC]').values
+        else:
+            values = df[select_column_name].values
+        return list(values)
     
 
 
