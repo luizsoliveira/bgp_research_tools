@@ -13,6 +13,7 @@ from dataset.dataset import Dataset
 from feature_selection.feature_selection import ExtraTreesFeatureSelection
 from exploratory_data_analysis.cli import execute_eda_single_task
 import sweetviz as sv
+from model_training.scatter import save_3d_scatter, save_plotly_scatter, save_3d_datetime_scatter
 
 DATASET_FILENAME = 'DATASET.csv'
 DATASET_FILENAME_WITHOUT_NORMALIZATION = 'DATASET-without-normalization.csv'
@@ -103,7 +104,7 @@ dataset = Dataset(dataset_path)
 #Dataset DataFrame
 df = dataset.df
 
-print(f" ⛔️ Looking for NaN values")
+print(f" ⛔️ Looking for NaN values on original dataset")
 nan_rows = df[df.isna().any(axis=1)]
 if (len(nan_rows)> 0):
     print(f"  → {nan_rows} NaN values were found.")
@@ -122,20 +123,35 @@ print()
 # df.info(verbose=True, show_counts=True)
 print()
 
-#Using dataset with NaN values dropped
-dataset = Dataset(df)
+#Dataset DataFrame
+dataset = dataset.get_normalized_zscore_dataset()
+df = dataset.df
+
+print(f" 📊 Stats of the normalized dataset")
+print(f"  → Regular: {len(df.loc[df['LABEL'] == 0])}")
+print(f"  → Anomalous: {len(df.loc[df['LABEL'] == 1])}")
+print(f"  → Total: {len(df)}")
+
+print()
 
 print(f" 🍕 Data partition:")
 
 effective_data_train_percentage = data_partition_training
 
 if (data_partition_reference == 'anomalous'):
+    # Anomalous ratio data partitioning
     print(f"  * Data partition referenced only on anomalous samples was detected.")
     print(f"  * This approach is a indirect way to do data partitioning.")
+
+    train_dataset, test_dataset = dataset.get_train_test_datasets_anomalous_ratio(data_partition_training)
     
     effective_data_train_percentage = dataset.get_effective_percentage_from_anomalous_percentage(data_partition_training)
     print(f"  * In order to have {data_partition_training*100}% of anomalous data points in the training partition")
     print(f"    will applied a effective data train of {effective_data_train_percentage}%")          
+
+else:
+    # Effective ratio data partitioning
+    train_dataset, test_dataset = dataset.get_train_test_datasets_effective_ratio(data_partition_training)
 
 print()
 
@@ -145,61 +161,53 @@ print(f"  ⛔️ Effective Testing size (proportion): {1-effective_data_train_pe
 print()
 
 #New Dataset with partition column
-new_df = dataset.get_df_with_partition_column(effective_data_train_percentage)
 print(f" 📊 Stats of the dataset with partition column")
-print(f"  → Training: {len(new_df.loc[new_df['TRAIN'] == 1])}")
-print(f"  → Testing: {len(new_df.loc[new_df['TRAIN'] == 0])}")
-print(f"  → Training - Regular: {len(new_df.loc[ (new_df['TRAIN'] == 1) & (new_df['LABEL'] == 0)])}")
-print(f"  → Training - Anomalous: {len(new_df.loc[(new_df['TRAIN'] == 1) & (new_df['LABEL'] == 1)])}")
-print(f"  → Testing - Regular: {len(new_df.loc[(new_df['TRAIN'] == 0) & (new_df['LABEL'] == 0)])}")
-print(f"  → Testing - Anomalous: {len(new_df.loc[(new_df['TRAIN'] == 0) & (new_df['LABEL'] == 1)])}")
-print(f"  → Total: {len(new_df)}")
+print(f"  → Training: {len(train_dataset)}")
+print(f"  → Testing: {len(test_dataset)}")
+print(f"  → Training - Regular: {train_dataset.count_regular_data_points()}")
+print(f"  → Training - Anomalous: {train_dataset.count_anomalous_data_points()}")
+print(f"  → Testing - Regular: {test_dataset.count_regular_data_points()}")
+print(f"  → Testing - Anomalous: {test_dataset.count_anomalous_data_points()}")
+print(f"  → Total: {len(dataset)}")
 print()
 
-# new_df.info(verbose=True, show_counts=True)
-print(f" 💾 Saving dataset")
-new_df.to_csv(DATASET_FILENAME_WITHOUT_NORMALIZATION)
-
 print(f" 💾 Saving Zscore normalized dataset")
-normalized_dataset = Dataset(new_df).get_normalized_zscore_dataset()
-normalized_dataset.df.to_csv(DATASET_FILENAME)
+dataset.df.to_csv(DATASET_FILENAME)
 
 print()
 
 #Train Dataset
-tr_dataset = dataset.get_training_sample(effective_data_train_percentage)
-
 print(f" 📊 Stats of the TRAINING sample:")
-print(f"  → Regular: {tr_dataset.count_regular_data_points()}")
-print(f"  → Anomalous: {tr_dataset.count_anomalous_data_points()}")
-print(f"  → Total: {tr_dataset.count_total_data_points()}")
+print(f"  → Regular: {train_dataset.count_regular_data_points()}")
+print(f"  → Anomalous: {train_dataset.count_anomalous_data_points()}")
+print(f"  → Total: {train_dataset.count_total_data_points()}")
 print()
 
-# tr_dataset.df.info(verbose=True, show_counts=True)
+# train_dataset.df.info(verbose=True, show_counts=True)
 print()
 
 #Testing Dataset
-ts_dataset = dataset.get_testing_sample(effective_data_train_percentage)
 print(f" 📊 Stats of the TESTING sample:")
-print(f"  → Regular: {ts_dataset.count_regular_data_points()}")
-print(f"  → Anomalous: {ts_dataset.count_anomalous_data_points()}")
-print(f"  → Total: {ts_dataset.count_total_data_points()}")
+print(f"  → Regular: {test_dataset.count_regular_data_points()}")
+print(f"  → Anomalous: {test_dataset.count_anomalous_data_points()}")
+print(f"  → Total: {test_dataset.count_total_data_points()}")
 print()
 
-# ts_dataset.df.info(verbose=True, show_counts=True)
+# test_dataset.df.info(verbose=True, show_counts=True)
 print()
 
 print(f" 📉 Executing automatic exploratory data analysis")
-html_path = os.path.join(task_working_dir, 'eda.html')
-report = sv.compare([tr_dataset.df, "Trainning"],[ts_dataset.df, "Test"], target_feat=dataset.target_column)
-try:
-    report.show_html(html_path, open_browser=False, layout='vertical')
-except Exception as e:
-    print(f"Failure during writing html EDA file. {html_path}")
+# html_path = os.path.join(task_working_dir, 'eda.html')
+# report = sv.compare([train_dataset.df, "Trainning"],[test_dataset.df, "Test"], target_feat=dataset.target_column)
+# try:
+#     report.show_html(html_path, open_browser=False, layout='vertical')
+# except Exception as e:
+#     print(f"Failure during writing html EDA file. {html_path}")
 
-print(f" 📉 Executing Feature Selection")
+# print(f" 📉 Executing Feature Selection")
 
-fs = ExtraTreesFeatureSelection(tr_dataset)
+# fs = ExtraTreesFeatureSelection(train_dataset)
+fs = ExtraTreesFeatureSelection(dataset)
 
 # Importances Dataframe
 idf = fs.getImportancesDataFrame()
@@ -220,5 +228,20 @@ top_n_features = 10
 
 print(f"###############################")
 print(f"* Selected (N={top_n_features}) features:")
-print(fs.getSelectedFeatures(top_n_features))
+selected_features = fs.getSelectedFeatures(top_n_features)
+print(selected_features)
 
+dataset.df.info()
+
+print(f"###############################")
+print(f"* Generating 3D scatter plots")
+save_3d_scatter('selected_features', dataset, selected_features[0], selected_features[1], selected_features[2])
+save_3d_scatter('paper', dataset, 'F8', 'F9', 'F5')
+save_3d_scatter('time', dataset,'POSIXTIME', 'F8', 'F9')
+# save_3d_datetime_scatter('time', dataset,'F8', 'F9')
+
+print(f"F8 min: {min(dataset.df['F8'])} max: {max(dataset.df['F8'])}")
+print(f"F9 min: {min(dataset.df['F9'])} max: {max(dataset.df['F9'])}")
+
+# save_plotly_scatter('plotly_paper_scatter.png', train_dataset, 'F8', 'F9', 'F5')
+# save_plotly_scatter('plotly_paper_time_scatter.png', dataset,'POSIXTIME', 'F8', 'F9')
