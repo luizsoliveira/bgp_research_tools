@@ -34,7 +34,7 @@ class ExtraTreesFeatureSelection:
         #                                 axis = 0)
         
         # Creating a DataFrame with the the Feature Selection result
-        df = pd.DataFrame(feature_importance, index=x.columns, columns=['importance'])
+        df = pd.DataFrame(feature_importance, index=self.dataset.get_features_columns(), columns=['importance'])
         df.sort_values(by=['importance'], ascending=False, inplace=True)
         return df
     
