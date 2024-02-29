@@ -156,6 +156,7 @@ class BGPCPlusPlusFeatureExtraction:
             f"-T -o {file_path_out} " + \
             (f"-asnfilt \"{':'.join(filter_by_asn)}\" " if len(filter_by_asn) > 0 else "")+ \
             (f"-nlriv4filt \"{','.join(filter_by_ipv4)}\" " if len(filter_by_ipv4) > 0 else "")+ \
+            (f"-nlriv6filt \"{','.join(filter_by_ipv6)}\" " if len(filter_by_ipv6) > 0 else "")+ \
             f"-f {' '.join(input_files)}"
         
         print(f" ⚡️ MRTprocessor CMD: {cmd}\n")

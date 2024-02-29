@@ -20,7 +20,7 @@ def convert_parameter_list(input, separator=":"):
     else:
         return []
 
-def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False, asnfilt=[], nlriv4filt=[]):
+def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, site_collection='ripe', max_concurrent_requests=32, cacheLocation=False, asnfilt=[], nlriv4filt=[], nlriv6filt=[]):
     
     extractor = BGPCPlusPlusFeatureExtraction()
     downloaded_files = []
@@ -44,7 +44,8 @@ def data_download_and_extract(output_file, datetime_start, datetime_end, rrc=4, 
             downloaded_files,
             output_file,
             filter_by_asn=asnfilt,
-            filter_by_ipv4=nlriv4filt
+            filter_by_ipv4=nlriv4filt,
+            filter_by_ipv6=nlriv6filt
     )
     
     if file_extract:
@@ -72,6 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('--output', dest='output_file', type=str, required=True, help='Choose the file output location.')
     parser.add_argument('--asnfilt', dest='asnfilt', type=str, required=False, default=False, help='Choose list of Autonomous System Numbers (ASNs) to be used to filter the BGP update messages.')
     parser.add_argument('--nlriv4filt', dest='nlriv4filt', type=str, required=False, default=False, help='Choose list of Network Layer Reachability Information (NLRI) IPv4 to be used to filter the BGP update messages.')
+    parser.add_argument('--nlriv6filt', dest='nlriv6filt', type=str, required=False, default=False, help='Choose list of Network Layer Reachability Information (NLRI) IPv6 to be used to filter the BGP update messages.')
     
     
     args = parser.parse_args()
@@ -83,6 +85,7 @@ if __name__ == "__main__":
 
     asnfilt = convert_parameter_list(args.asnfilt)
     nlriv4filt = convert_parameter_list(args.nlriv4filt, ",")
+    nlriv6filt = convert_parameter_list(args.nlriv6filt, ",")
     
     # is not False is different from True. Example chunk_number=0
     if (args.chunk_number is not False):
@@ -93,5 +96,5 @@ if __name__ == "__main__":
         print(f"The output_file name was adjusted to \"{output_file}\".")
 
     # print(datetime_start, datetime_end)
-    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory, asnfilt=asnfilt, nlriv4filt=nlriv4filt)
+    file_extract = data_download_and_extract(output_file, datetime_start, datetime_end, rrc=args.rrc, site_collection=args.site_collection, max_concurrent_requests=args.max_concurrent_requests, cacheLocation=args.mrt_cache_directory, asnfilt=asnfilt, nlriv4filt=nlriv4filt, nlriv6filt=nlriv6filt)
     print(file_extract)
