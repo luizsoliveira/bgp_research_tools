@@ -41,10 +41,13 @@ class Dataset:
             self.df[datetime_column] = pd.to_datetime(self.df[datetime_column], utc=True)
 
     def removeUndesiredColumns(self, df):
+        # Removing unnamed columns
+        df.drop(df.columns[df.columns.str.contains(
+            'unnamed', case=False)], axis=1, inplace=True)
         return df.drop(['HOUR', 'MINUTE', 'SECOND'], axis=1, errors='ignore')
     
     def removeUndesiredColumnsForTraining(self, df):
-        return df.drop(['POSIXTIME','DATETIME','HOUR', 'MINUTE', 'SECOND', 'TRAIN'], axis=1, errors='ignore')
+        return df.drop(['POSIXTIME','DATETIME','HOUR', 'MINUTE', 'SECOND', 'TRAIN','timestamp', 'datetime'], axis=1, errors='ignore')
     
     # Returns a DataFrame with the Dataset plus a TRAIN column
     # The TRAIN colum is filled according with train_size
@@ -110,18 +113,18 @@ class Dataset:
         df = self.removeUndesiredColumns(df)
         return Dataset(df)
     
-    def get_normalized_zscore_dataset(self, ddof=0):
+    def get_normalized_zscore_dataset(self, ddof=0, debug=False):
         # Get all numeric columns
         features_cols = list(self.df.select_dtypes(include=[np.number]).columns)
         # Remove POSIXTIME column
-        features_cols.remove('POSIXTIME')
+        if 'POSIXTIME' in features_cols: features_cols.remove('POSIXTIME')
         # Remove target column
-        features_cols.remove(self.target_column)
+        if self.target_column in features_cols: features_cols.remove(self.target_column)
         # Removing TRAIN column (if exists)         
         if 'TRAIN' in features_cols: features_cols.remove('TRAIN')
         # # Apply Zscore normalization in all columns (features) except POSIXTIME, TARGET and TRAIN (if exists)
         for column in features_cols:
-            print(f" Applying zscore normalization for column {column} with ddof={ddof}")
+            if debug: print(f" Applying zscore normalization for column {column} with ddof={ddof}")
             # self.df[column] = zscore(self.df[column], ddof=ddof)
             self.df[column] = (self.df[column] - np.mean(self.df[column])) / np.std(self.df[column])
             # Filling with zero NaN values.
@@ -170,7 +173,9 @@ class Dataset:
         # Separating the dependent and independent variables
         # The use of x and y variables are a convention in ML codes
         df = self.removeUndesiredColumnsForTraining(self.df)
+        # y <= just label column
         y = df[self.target_column]
+        # x <= just features columns
         x = df.drop(self.target_column, axis = 1)
         return np.array(x), np.array(y)
     
