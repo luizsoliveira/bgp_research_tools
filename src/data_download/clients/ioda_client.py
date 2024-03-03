@@ -1,7 +1,6 @@
 import requests
 import json
 import pandas as pd
-from sklearn.preprocessing import MaxAbsScaler
 import numpy as np
 
 class IODASignal:
@@ -27,7 +26,7 @@ class IODASignal:
             now += self.step
 
         if now != self.until_timestamp:
-            raise Exception(f"A value interpolation was finished with the last timestamp ({now}) different from until timestamp ({self.until}).")
+            print(f"WARNING: A value interpolation was finished with the last timestamp ({now}) different from until timestamp ({self.until_timestamp}).")
 
         return data
 
@@ -78,6 +77,7 @@ class IODAClient:
 
     def get_url(self, url):
         try:
+            print(url)
             res = requests.get(url, allow_redirects=True)
             res.raise_for_status()
             return res.content
@@ -96,7 +96,7 @@ class IODAClient:
         if entity_type not in self.VALID_ENTITY_TYPES:
             raise Exception(self.log_error(f"Invalid entity type provided. Allowed entity type are {', '.join(self.VALID_ENTITY_TYPES)}"))
 
-        url = f"{self.base_url}/v2/signals/raw/{entity_type}/{code}?from={from_timestamp}&until={until_timestamp}"
+        url = f"{self.base_url}/v2/signals/raw/{entity_type}/{code}?from={int(from_timestamp)}&until={int(until_timestamp)}"
         
         response = self.get_url(url)
         
@@ -126,24 +126,18 @@ class IODAClient:
             signal_df.columns = [f"{datasource}"]
             df = df.join(signal_df, how='outer')
 
-        df['ping-slash24'] = df['ping-slash24'].fillna(method='bfill')
+        if 'ping-slash24' in df.columns:
+            df['ping-slash24'] = df['ping-slash24'].ffill()
+        
+        if 'gtr-norm' in df.columns:
+            df['gtr-norm'] = df['gtr-norm'].ffill()
+        
         # df.dropna(how='any', inplace=True)
         
         if add_datetime_column:
             df['datetime'] = pd.to_datetime(list(df.index.values), unit='s', utc=True)
         return df
 
-    def get_signals_normalized_dataframe(self, entity_type, code, from_timestamp, until_timestamp, add_datetime_column=True):
-        df = self.get_signals_dataframe(entity_type, code, from_timestamp, until_timestamp, add_datetime_column=False)
-        #Normalizing
-        # df=(df-df.min())/(df.max()-df.min())
-        features_cols = list(df.select_dtypes(include=[np.number]).columns)
-        for column in features_cols:
-            print(f"Applying max scaled normalization at column {column}")
-            df[column] =  df[column] / df[column].abs().max() 
-        if add_datetime_column:
-            df['datetime'] = pd.to_datetime(list(df.index.values), unit='s', utc=True)
-        return df
 
 
 
