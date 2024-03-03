@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
+import datetime
+from datetime import timezone
 
 class AnomalousAndRegularDataLabeling:
 
@@ -42,6 +44,8 @@ class AnomalousAndRegularDataLabeling:
 
         df.to_csv(dataset_path_out, sep=delimiter_out, index=False, date_format='%Y-%m-%dT%H:%M:%S')
 
+        return df
+
     def put_labels(self,df, anomalous_datetime_start, anomalous_datetime_end, regular_label=0, anomalous_label=1):
 
         # In case of CPlusPLus will use the column POSIXTIME
@@ -49,12 +53,12 @@ class AnomalousAndRegularDataLabeling:
         # Todo: change errors to raise and put the stack on LOG file.
         if 'POSIXTIME' in df.columns:
             df['DATETIME'] = pd.to_datetime(df['POSIXTIME'], unit='s', errors='coerce')
-        elif 'POSIXTIME' in df.columns: 
+        if 'timestamp' in df.columns:
+            df['DATETIME'] = pd.to_datetime(df['timestamp'], unit='s', errors='coerce')
+        elif 'DATETIME' in df.columns: 
             df['DATETIME'] = pd.to_datetime(df['DATETIME'], errors='coerce')
         else:
             raise Exception(f"The timestamp column was not found.")
-
-        # print(df.info())
 
         #Adding a new column to put the LABEL
         df = df.assign(LABEL=0)
@@ -63,3 +67,40 @@ class AnomalousAndRegularDataLabeling:
         df['LABEL'] = np.where(( (df['DATETIME'] >= anomalous_datetime_start) & (df['DATETIME'] <= anomalous_datetime_end) ), anomalous_label, regular_label)
 
         return df
+
+    def put_labels_multiple_periods(self,df, anomalous_periods, regular_label=0, anomalous_label=1):
+        # In case of CPlusPLus will use the column POSIXTIME
+        # In case of CSharp will be use column DATETIME
+        # Todo: change errors to raise and put the stack on LOG file.
+        if 'POSIXTIME' in df.columns:
+            df['DATETIME'] = pd.to_datetime(df['POSIXTIME'], unit='s', errors='coerce')
+        elif 'timestamp' in df.columns:
+            df['DATETIME'] = pd.to_datetime(df['timestamp'], unit='s', errors='coerce')
+        elif 'DATETIME' in df.columns: 
+            df['DATETIME'] = pd.to_datetime(df['DATETIME'], errors='coerce')
+        elif 'datetime' in df.columns: 
+            df['DATETIME'] = pd.to_datetime(df['datetime'], errors='coerce')
+        else:
+            raise Exception(f"The timestamp column was not found.")
+        
+        df['LABEL'] = df.apply(lambda x: anomalous_label if self.is_inside_period(x['DATETIME'], anomalous_periods) else regular_label, axis=1)
+
+        return df
+
+    def is_inside_period(self,dt, anomalous_periods):
+
+        if not isinstance(dt, datetime.datetime):
+            raise Exception(f"The dr parameter has to be a datetime type. Instead {type(dt)} was provided.")
+
+        for ann_period in anomalous_periods:
+                       
+            if not (isinstance(ann_period['start'], datetime.datetime) and isinstance(ann_period['end'], datetime.datetime)):
+                raise Exception(f"The anomaly period start and end parameters has to be a datetime type. Instead {type(ann_period['start'])} and {type(ann_period['end'])} were provided.")
+
+            if dt.replace(tzinfo=timezone.utc) >= ann_period['start'] and dt.replace(tzinfo=timezone.utc) <= ann_period['end']:
+                # Anomaly label
+                return True
+        # Regular Label
+        return False
+
+    
