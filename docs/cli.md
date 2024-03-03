@@ -132,7 +132,7 @@ Data merging allows the merging of several output files, which is especially us
 
 ```console
 python src/data_merging/cli.py ~/datasets/ripe_dataset_westrock_rrc14_* \
--o ~/datasets/DATASET.csv
+-o ~/datasets/DATASET-unlabeled.csv
 ```
 * The CLI command receives a list of files to do data merging.
 * The parameter `-o` or `--output` specifies the destination of the file resulting from the data merging process.
@@ -145,7 +145,7 @@ python src/data_merging/cli.py ~/datasets/ripe_dataset_westrock_rrc14_* \
   * some temporal discontinuity is found between two data points.
 
 In the case above, the CLI will display the following output:
-```bash
+```
 Merging the following files:
  * ~/datasets/ripe_dataset_westrock_rrc14_1.csv
  * ~/datasets/ripe_dataset_westrock_rrc14_2.csv
@@ -173,8 +173,8 @@ python src/data_merging/cli.py --help
 
 ```console
 python src/data_labeling/cli.py \
--i ~/datasets/DATASET.csv \
--o ~/datasets/DATASET-LABELED.csv \
+-i ~/datasets/DATASET-unlabeled.csv \
+-o ~/datasets/DATASET.csv \
 --anomaly-from 20210123T011200 \
 --anomaly-to 20210129T235900
 ```
