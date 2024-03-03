@@ -16,6 +16,13 @@ sweetviz = "*"
 scikit-learn = "*"
 torch = "==1.13.1"
 natsort = "*"
+plotly = "*"
+keras = "*"
+tensorflow = "*"
+seaborn = "*"
+pydot = "*"
+graphviz = "*"
+pyod = "*"
 
 [dev-packages]
 
