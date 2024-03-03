@@ -13,7 +13,7 @@ from dataset.dataset import Dataset
 from feature_selection.feature_selection import ExtraTreesFeatureSelection
 from exploratory_data_analysis.cli import execute_eda_single_task
 import sweetviz as sv
-from model_training.scatter import save_3d_scatter, save_plotly_scatter, save_3d_datetime_scatter
+from dataset.dataset_scatter import save_3d_scatter, save_plotly_scatter, save_3d_datetime_scatter
 
 DATASET_FILENAME = 'DATASET.csv'
 DATASET_FILENAME_WITHOUT_NORMALIZATION = 'DATASET-without-normalization.csv'
