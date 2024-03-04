@@ -3,6 +3,7 @@ import os
 import numpy as np
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 import math
 
 class Dataset:
@@ -10,6 +11,8 @@ class Dataset:
     def __init__(self,dataset, target_column='LABEL'):
 
         self.target_column = target_column
+        self.file_path = ''
+        self.file_name = ''
 
         if isinstance(dataset, str):
             self.file_path_input = dataset
@@ -29,6 +32,9 @@ class Dataset:
         if not os.path.isfile(dataset_path):
             raise Exception(f"Aborting: The task path provided must to have a {dataset_path} file.")            
         
+        self.file_path = dataset_path
+        self.file_name = Path(dataset_path).name
+        
         df = pd.read_csv(dataset_path)
 
         return df
@@ -43,6 +49,7 @@ class Dataset:
 
     def removeUndesiredColumns(self, df):
         # Removing unnamed columns
+        df = df.copy(deep=True)
         df.drop(df.columns[df.columns.str.contains(
             'unnamed', case=False)], axis=1, inplace=True)
         return df.drop(['HOUR', 'MINUTE', 'SECOND'], axis=1, errors='ignore')
@@ -187,6 +194,9 @@ class Dataset:
         df = self.removeUndesiredColumnsForTraining(self.df)
         df = df.drop(self.target_column, axis = 1)
         return df.columns
+    
+    def get_number_of_features(self):
+        return len(self.get_features_columns())
 
     def save_to_file(self, path = './DATASET.CSV'):
         self.df.to_csv(path)
