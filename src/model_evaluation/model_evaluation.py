@@ -69,7 +69,8 @@ def save_evaluation_details(location, model, history, x_test, y_test):
     with open(metrics_filepath, "w") as metrics_file:
         json.dump(eval_metrics, metrics_file, indent=4, default=str)
 
-    return y_pred
+    return eval_metrics, y_pred
+
 
 def calculate_metrics(y_test, y_pred, will_print=True):
 
