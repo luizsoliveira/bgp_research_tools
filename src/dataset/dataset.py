@@ -3,6 +3,7 @@ import os
 import numpy as np
 from scipy.stats import zscore
 from sklearn.model_selection import train_test_split
+import math
 
 class Dataset:
 
@@ -62,7 +63,7 @@ class Dataset:
             raise Exception(f"Train size must be >= 0 and <= 1")
         
         df_lines = len(self.df.index)
-        train_lines = round(df_lines * train_size)
+        train_lines = math.floor(df_lines * train_size)
         test_lines = df_lines - train_lines
 
         if not (train_lines + test_lines == df_lines):
@@ -145,30 +146,33 @@ class Dataset:
         return len(self.df)
     
     # This method was designed for ordered datasets, usually time series dataset
-    # which all anomalous data points are located in a single contiguous cluster
     def get_effective_percentage_from_anomalous_percentage(self, anomalous_percentage, anomalous_value=1):
 
         if (anomalous_percentage < 0 or anomalous_percentage > 1):
             raise Exception(f"The anomalous_percentage has to be between 0 and 1")
         
         # Total amount of data points
-        size_total_sample = self.count_total_data_points()
-        
-        # Index of the first anomalous data point (getting target column from the class attribute)
-        first_anomalous_index = self.df[self.df[self.target_column] == anomalous_value].first_valid_index()
-        
-        # Index of the last anomalous data point (getting target column from the class attribute)
-        # last_anomalous_index = self.df[self.df[self.target_column] == anomalous_value].last_valid_index()
+        total_amount = self.count_total_data_points()
         
         # Amount of anomalous data points
-        size_anomalous_sample = len(self.df[self.df[self.target_column] == anomalous_value])
+        total_anomalous_count = self.count_anomalous_data_points()
 
-        # Index of separation data point (data point that will split the partitions)
-        separation_data_point = round(first_anomalous_index + (size_anomalous_sample * anomalous_percentage))
-        
-        effective_percentage = separation_data_point / size_total_sample
+        # Amount of anomalous data points in the first partition
+        selected_anomalous_count = math.floor(total_anomalous_count * anomalous_percentage)
+
+        # Get the required amount of anomalous data points
+        anomalous = self.df.loc[self.df[self.target_column] == anomalous_value].iloc[:selected_anomalous_count]
+
+        # Get the index of the last anomalous data point in the first partition
+        separation_idx  = anomalous.tail(1).index.values[0]
+
+        # Get the amount of data points before the separation_idx
+        effective_amount = len(self.df.loc[:separation_idx])
+
+        # Effective amount of data points in the first partition splited the total amount of data points
+        effective_percentage = effective_amount / total_amount
         return effective_percentage
-    
+      
     def get_x_y(self):
         # Separating the dependent and independent variables
         # The use of x and y variables are a convention in ML codes
