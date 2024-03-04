@@ -122,6 +122,8 @@ class Dataset:
         return Dataset(df)
     
     def get_normalized_zscore_dataset(self, ddof=0, debug=False):
+        # Creating a local copy of the dataset
+        df = self.df.copy(deep=True)
         # Get all numeric columns
         features_cols = list(self.df.select_dtypes(include=[np.number]).columns)
         # Remove POSIXTIME column
@@ -134,13 +136,13 @@ class Dataset:
         for column in features_cols:
             if debug: print(f" Applying zscore normalization for column {column} with ddof={ddof}")
             # self.df[column] = zscore(self.df[column], ddof=ddof)
-            self.df[column] = (self.df[column] - np.mean(self.df[column])) / np.std(self.df[column])
+            df[column] = (df[column] - np.mean(df[column])) / np.std(df[column])
             # Filling with zero NaN values.
             # Were found when all values are 0 the zscore result will be nan for all rows
-            if (self.df[column].isna().any()):
+            if (df[column].isna().any()):
                 print(f"Were found NaN values on column {column} and these values were replaced to zero.")
-                self.df[column].fillna(0, inplace=True)
-        return Dataset(self.df)
+                df[column].fillna(0, inplace=True)
+        return Dataset(df)
         
     
     def count_regular_data_points(self, regular_value=0):
