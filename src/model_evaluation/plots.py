@@ -55,7 +55,7 @@ def plot_model_train_val_loss(history, file_path=False):
     plt.close()
 
 
-def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title):
+def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title, html_path=False):
 
     # Creating a local and independent copy
     dataset_train = dataset_train.df.copy(deep=True)
@@ -134,4 +134,7 @@ def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title):
         yaxis = {'title' : "Values"}
     )
     fig = go.Figure(data=traces, layout=layout)
-    fig.show()
+    if (html_path):
+        fig.write_html(html_path)
+    else:
+        fig.show()
