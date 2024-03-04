@@ -19,7 +19,7 @@ def save_model_details(location, model):
     summary_filepath = os.path.join(location,"summary.txt")
     with open(summary_filepath, "w") as summary_file:
         # Pass the file handle in as a lambda function to make it callable
-        model.summary(print_fn=lambda x, line_break: summary_file.write(f"{x}{line_break}"))
+        model.summary(print_fn=lambda x, line_break="\n": summary_file.write(f"{x}{line_break}"))
     # Plotting Model
     plot_filepath = os.path.join(location,"model.png")
     keras.utils.plot_model(model,
