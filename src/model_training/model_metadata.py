@@ -27,9 +27,10 @@ def save_model_details(location, model):
                            show_shapes=True,
                            show_layer_activations=True,
                            show_trainable=True)
-    
-def get_model_hash(model):
-    model_config = str(model.get_config())
+
+# Generate a unique ID based on dataset and model parameters    
+def get_model_hash(model, params, dataset_filepath):
+    model_config = str(dataset_filepath) + str(params) + str(model.get_config())
     return str(uuid.uuid5(uuid.NAMESPACE_URL, model_config))
 
 
