@@ -214,6 +214,10 @@ class Dataset:
             values = df[select_column_name].values
         return list(values)
     
+    def print_stats(self):
+        print(f"  - Total data points: {self.count_total_data_points()}")
+        print(f"  - Regular data points: {self.count_regular_data_points()}")
+        print(f"  - Anomaly data points: {self.count_anomalous_data_points()}")
 
 
 
