@@ -53,7 +53,6 @@ class IODAClient:
         #Checking if logging has a valid value
         if not (self.logging==False or (hasattr(self.logging, 'basicConfig') and hasattr(self.logging.basicConfig, '__call__'))):
             raise Exception('The logging parameters need to be a valid logging object or False')
-        
 
     def log_info(self, msg):
         if self.logging: self.logging.info(msg)
@@ -133,12 +132,38 @@ class IODAClient:
             df['gtr-norm'] = df['gtr-norm'].ffill()
         
         # df.dropna(how='any', inplace=True)
-        
+            
         if add_datetime_column:
             df['datetime'] = pd.to_datetime(list(df.index.values), unit='s', utc=True)
+        
+        # Excluding values outside of the requested time window
+        # IODA can return a time window wider than requested
+        # print(f"Limiting output from->to timestamp: {from_timestamp}->{until_timestamp}")
+        df = df.loc[from_timestamp:until_timestamp+1]
         return df
+    
+    # Examples:
+    # https://api.ioda.inetintel.cc.gatech.edu/v2/entities/query?entityType=asn&relatedTo=country/IQ
+    # https://api.ioda.inetintel.cc.gatech.edu/v2/entities/query?entityType=asn&relatedTo=region/4369
+    def get_related_asns(self, related_entity_type, related_entity_code):
+        valid_related_entities = ['country', 'region']
+        if not related_entity_type in valid_related_entities:
+            raise Exception(self.log_error(f"Invalid related entity type provided. Allowed entity type are {', '.join(valid_related_entities)}"))
+        
+        url = f"{self.base_url}/v2/entities/query?entityType=asn&relatedTo={related_entity_type}/{related_entity_code}"
 
-
+        response = self.get_url(url)
+        response = json.loads(response)
+        
+        asns = []
+        if 'data' not in response:
+            raise Exception(self.log_error(f"The response for the following URL doesn't returned data. (URL={url})"))
+        
+        data = response['data']
+        for d in data:
+            asns.append(int(d['code']))
+        
+        return asns
 
 
 
