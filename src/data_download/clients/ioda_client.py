@@ -161,7 +161,7 @@ class IODAClient:
         
         data = response['data']
         for d in data:
-            asns.append(int(d['code']))
+            asns.append(str(d['code']))
         
         return asns
 
