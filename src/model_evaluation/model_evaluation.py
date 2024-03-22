@@ -8,6 +8,7 @@ import numpy as np
 import os
 from model_evaluation.plots import plot_model_train_val_loss
 import json
+from pathlib import Path
 
 # This function can be called to evaluate the model against the train and test partitions
 # def univariate_autoencoder_evaluation_report(model, X, Y):
@@ -41,13 +42,19 @@ import json
     
 #     return df, threshold
 
-def save_evaluation_details(location, model, history, x_test, y_test):
+def save_evaluation_details(location, model, history, x_test, y_test, save=False):
+
+    if save:
+        # Creating folder if not exists
+        Path(location).mkdir(parents=True, exist_ok=True)
+
     #Train and Test Loss
     test_loss, test_acc = model.evaluate(x_test, y_test)
     print("Test accuracy", test_acc)
     print("Test loss", test_loss)
     plot_train_val_los_filepath = os.path.join(location, "train_val_loss.png")
-    plot_model_train_val_loss(history, file_path=plot_train_val_los_filepath)
+    if save:
+        plot_model_train_val_loss(history, file_path=plot_train_val_los_filepath)
 
     # Getting predictions
     # For each data point returns a tuple with the
@@ -65,9 +72,11 @@ def save_evaluation_details(location, model, history, x_test, y_test):
     # if (len(y_pred) != len(dataset_test)):
     #     raise Exception(f"Number of predictions different from dataset_test. Check the code.")
     eval_metrics = calculate_metrics(y_test, y_pred, will_print=False)
-    metrics_filepath = os.path.join(location, "eval_metrics.json")
-    with open(metrics_filepath, "w") as metrics_file:
-        json.dump(eval_metrics, metrics_file, indent=4, default=str)
+
+    if save:
+        metrics_filepath = os.path.join(location, "eval_metrics.json")
+        with open(metrics_filepath, "w") as metrics_file:
+            json.dump(eval_metrics, metrics_file, indent=4, default=str)
 
     return eval_metrics, y_pred
 
