@@ -52,7 +52,7 @@ def save_evaluation_details(location, model, history, x_test, y_test):
     # Getting predictions
     # For each data point returns a tuple with the
     # probabilities to be class 0 (regular) or class 1 (anomalous)
-    Y_pred_prob = model.predict(x_test)
+    Y_pred_prob = model.predict(x_test, verbose=0)
 
     # Select the class with the max probability
     # Arg max return the index of the element with the max value
