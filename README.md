@@ -46,7 +46,7 @@ git clone https://github.com/RIPE-NCC/bgpdump tmp_bgpdump
 cd tmp_bgpdump
 # In case of Niagara:
 # module load autotools
-# module load gcc/9.3.0
+# module load gcc/13.2.0
 # module load cmake
 autoheader
 autoconf
