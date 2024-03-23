@@ -18,24 +18,56 @@ apt -y install python3-pip
 python3 -m pip install -r src/requirements.txt
 ```
 
-## Instaling on HPC (CEDAR)
+## Instaling on HPC
 
 ```bash
 # Downloading python code
 git clone https://github.com/luizsoliveira/bgp_research_tools
 cd bgp_research_tools
-# Loading modules python3.10 and scipy-stack
-module load python/3.10
+# Loading modules python3.11 and scipy-stack
+module load python/3.11
 module load scipy-stack
 # Creating a virtual environment on the folder ENV
 virtualenv --no-download ENV
 # Activating the virtual environment created
 source ENV/bin/activate
 # Updating pip in the environment
-pip install --no-index --upgrade pip
+python3.11 -m pip install --no-index --upgrade pip
 # Installing the required python packages, 
-python3.10 -m pip install -r src/requirements.txt --no-index
+python3.11 -m pip install -r src/requirements.txt --no-index
 # The --no-index option tells pip to not install from PyPI, but instead to install only from locally available packages, i.e. CEDAR wheels.
+```
+
+## Instaling MRTprocessor on HPC (for feature extraction)
+```bash
+mkdir ~/bgp_research_tools/src/feature_extraction/mrtprocessor
+cd ~/bgp_research_tools/src/feature_extraction/mrtprocessor
+git clone https://github.com/RIPE-NCC/bgpdump tmp_bgpdump
+cd tmp_bgpdump
+# In case of Niagara:
+# module load autotools
+# module load gcc/13.2.0
+# module load cmake
+autoheader
+autoconf
+./configure --prefix ~/bgp_research_tools/src/feature_extraction/mrtprocessor
+make
+make install
+cd ..
+rm -fr tmp_bgpdump
+ls -l
+git clone https://github.com/zhida-li/CyberDefense repo
+cd repo
+git checkout dev-2.0
+cd src/mrtprocessor/
+#Edit file CMakeLists.txt
+sed -i -e 's|$ENV{HOME}/.local|~/bgp_research_tools/src/feature_extraction/mrtprocessor|g' ./CMakeLists.txt
+sed -i -e 's|set(CMAKE_CXX_STANDARD 17)|set(CMAKE_CXX_STANDARD 20)|g' ./CMakeLists.txt
+rm -fr CMakeFiles Makefile
+cmake .
+make
+ln -sf ~/bgp_research_tools/src/feature_extraction/mrtprocessor/repo/src/mrtprocessor/mrtprocessor ~/bgp_research_tools/src/feature_extraction/mrtprocessor/bin/mrtprocessor
+
 ```
 
 ## Useful information about BGP anomaly events

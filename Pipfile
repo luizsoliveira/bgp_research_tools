@@ -23,6 +23,7 @@ seaborn = "*"
 pydot = "*"
 graphviz = "*"
 pyod = "*"
+requests-cache = "*"
 
 [dev-packages]
 

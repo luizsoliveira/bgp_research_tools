@@ -21,6 +21,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 import concurrent.futures
 import time
+from requests_cache import CachedSession, FileCache
+from pathlib import Path
 
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -53,11 +55,21 @@ class RIPEClient:
 
         # This attribute stores the tmp_object
         self.tmp = False
+        self.session=False
 
         # Mapping possible cache location passed
         if (cacheLocation):
             #To-do: check if the location exists and it is writeable
             self.work_dir = f"{cacheLocation}/ripe"
+            # Creating folder if not exists
+            Path(self.work_dir).mkdir(parents=True, exist_ok=True)
+            # Creating HTML cache to be used by nodes without internet access
+            html_cache_dir = os.path.join(self.work_dir, 'html_cache')
+            Path(self.work_dir).mkdir(parents=True, exist_ok=True)
+            self.session = CachedSession(backend=FileCache(
+                cache_name=html_cache_dir,
+
+            ))
         else:
             #Creating a unique temp dir (when cache feature is disabled)
             with tempfile.TemporaryDirectory(prefix="bgptools_") as tmp_dirname:
@@ -214,7 +226,8 @@ class RIPEClient:
         # Getting file links from one index page
         self.log_info('Getting file links from one index page: ' + self.filename_from_url(url))
         try:
-            res = requests.get(url, allow_redirects=True)
+            # res = requests.get(url, allow_redirects=True)
+            res = self.requests_get_with_cache(url)
             res.raise_for_status()
             
             try:
@@ -313,6 +326,12 @@ class RIPEClient:
             buckets[date].append(file)
 
         return buckets
+    
+    def requests_get_with_cache(self, url):
+        if self.session:
+            return self.session.get(url, allow_redirects=True)
+        else:
+            return requests.get(url, allow_redirects=True)
             
 
 
