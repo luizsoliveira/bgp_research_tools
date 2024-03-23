@@ -42,6 +42,6 @@ class ExtraTreesFeatureSelection:
     # Important to pass just the TRAINING DATASET
     def getSelectedFeatures(self, topFeatures=10, n_estimators=100, random_state=1):
         df = self.getImportancesDataFrame(n_estimators=n_estimators, random_state=random_state)
-        return list(df.iloc[:topFeatures+1].index)
+        return list(df.iloc[:topFeatures].index)
         
 

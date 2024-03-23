@@ -24,11 +24,11 @@ def bilstm_make_model(input_shape, num_classes):
 
 
 bilstm_callbacks = [
-    keras.callbacks.ModelCheckpoint(
-        "best_model.keras", save_best_only=True, monitor="val_loss"
-    ),
+    # keras.callbacks.ModelCheckpoint(
+    #     "best_model.keras", save_best_only=True, monitor="val_loss"
+    # ),
     keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001
+        monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001, verbose=0
     ),
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=1),
+    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=0),
 ]

@@ -105,3 +105,22 @@ class RIPEStatClient:
             ipv6 = ipv6.union(p[1])
 
         return ipv4, ipv6
+    
+    def get_country_resource_list(self, country_code, time, remove_non_cidr_standard=True):
+
+        url = f"{self.baseURL}/country-resource-list/data.json?resource={country_code}&v4_format=prefix&time={time}"
+
+        response = self.get_url(url)
+        response = json.loads(response)
+
+        if 'data' not in response:
+            raise Exception(self.log_error(f"The response for the following URL doesn't returned data. (URL={url})"))
+        
+        data = response['data']
+
+        asns = data['resources']['asn']
+        ipv4 = data['resources']['ipv4']
+        ipv6 = data['resources']['ipv6']
+
+        return asns, ipv4, ipv6
+
