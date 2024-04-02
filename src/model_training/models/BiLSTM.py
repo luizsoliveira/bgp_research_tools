@@ -9,14 +9,23 @@ def bilstm_make_model(input_shape, num_classes):
     input_layer = keras.layers.Input(shape=input_shape, name="TIMESERIES_INPUT")
     # RNN Layers
     # layer - 1
-    rec_layer_one = keras.layers.Bidirectional(keras.layers.LSTM(128, kernel_regularizer=keras.regularizers.l2(0.01), recurrent_regularizer=keras.regularizers.l2(0.01),return_sequences=True),name ="BIDIRECTIONAL_LAYER_1")(input_layer)
+    rec_layer_one = keras.layers.Bidirectional(
+                        keras.layers.LSTM(128,
+                            kernel_regularizer=keras.regularizers.l2(0.01),
+                            recurrent_regularizer=keras.regularizers.l2(0.01),
+                            return_sequences=True)
+                        ,name ="BIDIRECTIONAL_LAYER_1")(input_layer)
     rec_layer_one = keras.layers.Dropout(0.1,name ="DROPOUT_LAYER_1")(rec_layer_one)
+    
     # layer - 2
-    rec_layer_two = keras.layers.Bidirectional(keras.layers.LSTM(64, kernel_regularizer=keras.regularizers.l2(0.01), recurrent_regularizer=keras.regularizers.l2(0.01)),name ="BIDIRECTIONAL_LAYER_2")(rec_layer_one)
+    rec_layer_two = keras.layers.Bidirectional(
+                        keras.layers.LSTM(64,
+                            kernel_regularizer=keras.regularizers.l2(0.01),
+                            recurrent_regularizer=keras.regularizers.l2(0.01))
+                        ,name ="BIDIRECTIONAL_LAYER_2")(rec_layer_one)
     rec_layer_two = keras.layers.Dropout(0.1,name ="DROPOUT_LAYER_2")(rec_layer_two)
     
     combined_dense_two = keras.layers.Dense(64, activation='relu',name="DENSE_LAYER_2")(rec_layer_two)
-
     # output_layer = keras.layers.Dense(num_classes, activation="softmax")(combined_dense_two)
     output_layer = keras.layers.Dense(num_classes, activation="sigmoid")(combined_dense_two)
 
