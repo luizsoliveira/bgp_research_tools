@@ -8,9 +8,9 @@ def save_3d_scatter(filename_prefix, dataset, x_column, y_column, z_column):
     ax = fig.add_subplot(projection='3d')
 
     #Adding regular
-    ax.scatter(dataset.select_where(x_column,'LABEL',0), dataset.select_where(y_column,'LABEL',0), dataset.select_where(z_column,'LABEL',0), marker='o', label='Class 0: Regular', s=10)
+    ax.scatter(dataset.select_where(x_column,'LABEL',0), dataset.select_where(y_column,'LABEL',0), dataset.select_where(z_column,'LABEL',0), marker='o', label='Class 0: Regular', s=10, facecolors='none', edgecolors='tab:blue')
     #Adding anomalous
-    ax.scatter(dataset.select_where(x_column,'LABEL',1), dataset.select_where(y_column,'LABEL',1), dataset.select_where(z_column,'LABEL',1), marker='*', label='Class 1: Anomalous', s=10)
+    ax.scatter(dataset.select_where(x_column,'LABEL',1), dataset.select_where(y_column,'LABEL',1), dataset.select_where(z_column,'LABEL',1), marker='*', label='Class 1: Anomalous', s=10, facecolors='none', edgecolors='tab:orange')
 
     ax.set_xlabel(x_column)
     ax.set_ylabel(y_column)
