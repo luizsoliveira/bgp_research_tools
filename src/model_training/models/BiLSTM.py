@@ -39,5 +39,5 @@ bilstm_callbacks = [
     keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.5, patience=20, min_lr=0.0001, verbose=0
     ),
-    keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=0),
+    # keras.callbacks.EarlyStopping(monitor="val_loss", patience=50, verbose=0),
 ]
