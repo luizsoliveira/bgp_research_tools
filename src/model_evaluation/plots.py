@@ -64,7 +64,7 @@ def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title, htm
     dataset_test = dataset_test.df.copy(deep=True)
 
     # Adjusting y_pred value just for plot
-    y_pred = list(map(lambda x: float(str(x).replace("1", "6.8")),y_pred))
+    y_pred = list(map(lambda x: float(str(x).replace("1", "1.8")),y_pred))
 
     dataset_test.loc[:,'y_pred'] = y_pred
     dataset_train.loc[:,'is_train'] = -10
@@ -72,7 +72,7 @@ def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title, htm
 
     graph_df = pd.concat([dataset_train,dataset_test], ignore_index=True)
 
-    graph_df['LABEL'] = list(map(lambda x: float(str(x).replace("1", "7")),graph_df['LABEL']))
+    graph_df['LABEL'] = list(map(lambda x: float(str(x).replace("1", "2")),graph_df['LABEL']))
 
     traces = []
 
@@ -118,7 +118,7 @@ def plot_overview_chart(dataset_train, dataset_test, y_pred, columns, title, htm
         fillcolor='rgba(0,255,0,0.15)',
         # fillpattern=dict({"shape":"."}),
         line={'width': 0},
-        name = 'Train partition',
+        name = 'Training partition',
     ))
     traces.append(go.Scatter(
         x = dates,
